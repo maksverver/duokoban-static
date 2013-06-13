@@ -1,9 +1,10 @@
 "use strict"
 
 /* TODO:
-    - make goal squares for players work
-    - allow more boxes than goals
     - should call playerMove for both players at end of animation!
+    - add more default levels!
+    - easier way to share levels?
+    - maybe: internet multiplayer?
 */
 
 var DX = [ +1,  0, -1,  0 ]
@@ -287,8 +288,12 @@ function checkWinning()
     {
         for (var x = 0; x < W; ++x)
         {
-            if (layer0[y][x] == GOAL) have_goals = true
-            if ((layer0[y][x] == GOAL) != (layer1[y][x] == BOX)) winning = false
+            if (layer0[y][x] >= GOAL)
+            {
+                have_goals = true
+                console.log((layer1[y][x] - BOX) + "?" +  (layer0[y][x] - GOAL))
+                if (layer1[y][x] - BOX != layer0[y][x] - GOAL) winning = false
+            }
         }
     }
     if (winning && have_goals)
@@ -389,6 +394,7 @@ function movePlayer(player, new_dir)
                 }, function() {
                     layer1[y1][x1] = EMPTY
                     layer1[y2][x2] = p
+                    checkWinning()
                     movePlayer(player)
                 })
             }
