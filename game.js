@@ -1,10 +1,8 @@
 "use strict"
 
 /* TODO:
-    - reframe sprite + functionality!
     - make goal squares for players work
     - allow more boxes than goals
-
     - should call playerMove for both players at end of animation!
 */
 
@@ -250,22 +248,6 @@ function onCellClicked(x,y, dragged)
 
     var tool = tools[selected_tool]
 
-    function moveOnGrid(grid, empty)
-    {
-        if (grid[y][x] == tool)
-        {
-            grid[y][x] = empty
-            return true
-        }
-        if (grid[y][x] == empty)
-        {
-            replaceOnGrid(grid, tool, empty)
-            grid[y][x] = tool
-            return true
-        }
-        return false
-    }
-
     switch (tool)
     {
     case WALL:
@@ -284,11 +266,14 @@ function onCellClicked(x,y, dragged)
         return
     case GOAL1:
     case GOAL2:
-        if (moveOnGrid(layer0, OPEN)) break
+        if (layer0[y][x] == tool) { layer0[y][x] = OPEN; break }
+        if (layer0[y][x] == OPEN) { replaceOnGrid(layer0, tool, OPEN); layer0[y][x] = tool; break }
         return
     case PLAYER1:
     case PLAYER2:
-        if (moveOnGrid(layer1, EMPTY)) break
+        if (layer1[y][x] == tool) { layer1[y][x] = EMPTY; break }
+        if (layer0[y][x] == OPEN && layer1[y][x] == EMPTY) { replaceOnGrid(layer1, tool, EMPTY); layer1[y][x] = tool; break }
+        return
     default:
         return
     }
@@ -527,6 +512,12 @@ function selectTool(i)
         }
         selected_tool = -1
     }
+    if (tools[i] == REFRAME)
+    {
+        reframe()
+        redraw()
+        return
+    }
     selected_tool = (i == selected_tool) ? -1 : i
     redraw()
 }
@@ -694,6 +685,34 @@ function drawSpriteAt(context, x, y, what)
             context.closePath()
             context.stroke()
         }
+        break
+
+    case REFRAME:
+        // FIXME: it might be faster to pre-calculate the points for this polygon
+        context.beginPath()
+        var endpoints = [ [  0.050,   0.0 ],
+                          [  0.050,   0.2 ],
+                          [  0.125,   0.2 ],
+                          [  0.000,   0.4 ],
+                          [ -0.125,   0.2 ],
+                          [ -0.050,   0.2 ],
+                          [ -0.050,   0.0 ] ]
+        for (var i = 0; i < 4; ++i)
+        {
+            for (var j = 0; j < endpoints.length; ++j)
+            {
+                var dx = endpoints[j][0],
+                    dy = endpoints[j][1]
+                context.lineTo(x + 0.5*S + S*dx, y + 0.5*S + S*dy)
+                endpoints[j][0] =  dy
+                endpoints[j][1] = -dx
+            }
+        }
+        context.strokeStyle = '#804000'
+        context.lineWidth = 3
+        context.stroke()
+        context.fillStyle = '#ff8000'
+        context.fill()
         break
     }
     context.restore()
