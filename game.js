@@ -1,22 +1,32 @@
 "use strict"
 
 /* TODO:
-    - option to make grid smaller/larger in edit mode
-    - goal squares for players?
+    - reframe sprite + functionality!
+    - make goal squares for players work
+    - allow more boxes than goals
+
+    - should call playerMove for both players at end of animation!
 */
 
 var DX = [ +1,  0, -1,  0 ]
 var DY = [  0, +1,  0, -1 ]
 
-var WALL = 0
-var OPEN = 1
-var GOAL = 2
+// Layer 0 values:
+var WALL  = 0
+var OPEN  = 1
+var GOAL  = 2  // goal for a box
+var GOAL1 = 3  // goal for player 1
+var GOAL2 = 4  // goal for player 2
 
+// Layer 1 values:
 var LOCKED   = -1
 var EMPTY    =  0
-var BOX      =  3
-var PLAYER1  =  4
-var PLAYER2  =  5
+var BOX      =  5
+var PLAYER1  =  6
+var PLAYER2  =  7
+
+// Other values which have associated sprites:
+var REFRAME  =  8
 
 var base64digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 
@@ -30,11 +40,15 @@ var layer0 = createGrid(WALL)
 var layer1 = createGrid(EMPTY)
 
 var move_dir        = [ -1, -1 ]
-var grab_dir        = [ -2, -1 ]
-var selected_tool   = 0
+var grab_dir        = [ -2, -1 ]   // -1: no grab.  -2: can't grab.
+var selected_tool   = -1
 var animations      = []
 var post_animations = []
 var winning_time    = -1
+
+var tools = [ WALL,  OPEN,    REFRAME,
+              GOAL,  GOAL1,   GOAL2,
+              BOX,   PLAYER1, PLAYER2 ]
 
 function reframe()
 {
@@ -85,18 +99,24 @@ function layersToString()
             bits -= 6
         }
     }
+    function appendUnary(i)
+    {
+        append((1 << i) - 1, i + 1)
+    }
     append(H, 6)
     append(W, 6)
-    append(0 + (grab_dir[0] > -2), 1)
-    append(0 + (grab_dir[1] > -2), 1)
-    append(0, 4)  // reserved
+    append(4, 6)  // version 1
     for (var y = 0; y < H; ++y)
     {
         for (var x = 0; x < W; ++x)
         {
-            append(layer0[y][x], 2)
-            var i = layer1[y][x]
-            append(i>2 ? i-2 : 0, 2)
+            appendUnary(layer0[y][x])
+            if (layer0[y][x] != WALL)
+            {
+                var i = layer1[y][x]
+                appendUnary(i < BOX ? 0 : i - BOX + 1)
+                if (i >= PLAYER1) append((grab_dir[i - PLAYER1] > -2)|0, 1)
+            }
         }
     }
     if (bits > 0) append(0, 6 - bits%6)
@@ -118,19 +138,44 @@ function stringToLayers(arg)
         bits -= n
         return res
     }
+    function getUnary()
+    {
+        var i = 0
+        while (get(1)) ++i
+        return i
+    }
     H = get(6)
     W = get(6)
-    grab_dir = [ -2 + get(1), -2 + get(1) ]
-    get(4)
     layer0 = createGrid(WALL)
     layer1 = createGrid(EMPTY)
-    for (var y = 0; y < H; ++y)
+    var info = get(6)
+    if (info < 4)
     {
-        for (var x = 0; x < W; ++x)
+        // Version 1 format:
+        grab_dir = [ -2 + (info & 1), -2 + ((info&2) >> 1) ]
+        for (var y = 0; y < H; ++y)
         {
-            layer0[y][x] = get(2)
-            var i = get(2)
-            layer1[y][x] = i ? i+2 : 0
+            for (var x = 0; x < W; ++x)
+            {
+                layer0[y][x] = get(2)
+                var i = get(2)
+                layer1[y][x] = i > 0 ? i - 1 + BOX : 0
+            }
+        }
+    }
+    else  // assumes byte read was `4`
+    {
+        // Version 2 format:
+        for (var y = 0; y < H; ++y)
+        {
+            for (var x = 0; x < W; ++x)
+            {
+                layer0[y][x] = getUnary()
+                var i = (layer0[y][x] == WALL) ? EMPTY : getUnary()
+                if (i > 0) i += BOX -1
+                layer1[y][x] = i
+                if (i >= PLAYER1) grab_dir[i - PLAYER1] = -2 + get(1)
+            }
         }
     }
     var canvas = document.getElementById("GameCanvas")
@@ -203,33 +248,47 @@ function onCellClicked(x,y, dragged)
 {
     if (!inBounds(x, y) || (dragged && selected_tool > 2)) return
 
-    switch (selected_tool)
+    var tool = tools[selected_tool]
+
+    function moveOnGrid(grid, empty)
     {
-    case 1:
-        if (layer0[y][x] == OPEN && layer1[y][x] == EMPTY) { layer0[y][x] = WALL; break }
-        return
-    case 2:
-        if (layer0[y][x] == WALL) { layer0[y][x] = OPEN; break }
-        return
-    case 3:
-        if (layer0[y][x] == OPEN) { layer0[y][x] = GOAL; break }
-        if (layer0[y][x] == GOAL) { layer0[y][x] = OPEN; break }
-        return
-    case 4:
-        if (layer0[y][x] != WALL && layer1[y][x] == EMPTY) { layer1[y][x] = BOX; break }
-        if (layer1[y][x] == BOX) { layer1[y][x] = EMPTY; break }
-        return
-    case 5:
-    case 6:
-        var p = PLAYER1 + (selected_tool - 5)
-        if (layer0[y][x] != WALL && layer1[y][x] == EMPTY)
+        if (grid[y][x] == tool)
         {
-            replaceOnGrid(layer1, p, EMPTY)
-            layer1[y][x] = p;
-            break
+            grid[y][x] = empty
+            return true
         }
-        if (layer1[y][x] == p && !dragged) { layer1[y][x] = EMPTY; break }
+        if (grid[y][x] == empty)
+        {
+            replaceOnGrid(grid, tool, empty)
+            grid[y][x] = tool
+            return true
+        }
+        return false
+    }
+
+    switch (tool)
+    {
+    case WALL:
+        if (layer0[y][x] != WALL && layer1[y][x] == EMPTY) { layer0[y][x] = WALL; break }
         return
+    case OPEN:
+        if (layer0[y][x] != OPEN) { layer0[y][x] = OPEN; break }
+        return
+    case GOAL:
+        if (layer0[y][x] == tool) { layer0[y][x] = OPEN; break }
+        if (layer0[y][x] != WALL) { layer0[y][x] = tool; break }
+        return
+    case BOX:
+        if (layer1[y][x] == BOX) { layer1[y][x] = EMPTY; break }
+        if (layer0[y][x] != WALL && layer1[y][x] == EMPTY) { layer1[y][x] = BOX; break }
+        return
+    case GOAL1:
+    case GOAL2:
+        if (moveOnGrid(layer0, OPEN)) break
+        return
+    case PLAYER1:
+    case PLAYER2:
+        if (moveOnGrid(layer1, EMPTY)) break
     default:
         return
     }
@@ -437,9 +496,8 @@ function updateStateFromHash()
     else
     {
         document.getElementById("ToolCanvas").style.display = "none"
-        selected_tool = 0
+        selected_tool = -1
     }
-    move_dir = [ -1, -1 ]
     checkWinning()
     redraw()
 }
@@ -457,23 +515,19 @@ function restart()
 
 function selectTool(i)
 {
-    if ((i < 0 || i > 6) || !params.edit) return
-    if (i == 5 || i == 6)
+    if (i < -1 || i >= tools.length || !params.edit) return
+
+    if (tools[i] >= PLAYER1 && tools[i] <= PLAYER2)
     {
-        if (i != selected_tool)
+        if (i == selected_tool)
         {
-            selected_tool = i
-        }
-        else
-        {
-            grab_dir[i - 5] = -2 + (grab_dir[i - 5] == -2)
+            var player = tools[i] - PLAYER1
+            grab_dir[player] = -2 + (grab_dir[player] == -2)
             updateHashFromState()
         }
+        selected_tool = -1
     }
-    else
-    {
-        selected_tool = (i == selected_tool) ? 0 : i
-    }
+    selected_tool = (i == selected_tool) ? -1 : i
     redraw()
 }
 
@@ -524,20 +578,24 @@ function initialize()
         fixEventOffset(event, tool_canvas)
         var x = parseInt((event.offsetX/S - 0.05)/1.1)
         var y = parseInt((event.offsetY/S - 0.05)/1.1)
-        selectTool(3*(1 - y) + x + 1)
+        selectTool(3*(2 - y) + x)
     })
 
     document.addEventListener("keydown", function(event) {
         var handled = true
+
         switch (event.keyCode)
         {
-        case 48: case  96: selectTool(0); break  // 0
-        case 49: case  97: selectTool(1); break  // 1
-        case 50: case  98: selectTool(2); break  // 2
-        case 51: case  99: selectTool(3); break  // 3
-        case 52: case 100: selectTool(4); break  // 4
-        case 53: case 101: selectTool(5); break  // 5
-        case 54: case 102: selectTool(6); break  // 6
+        case 48: case  96:  // 0
+        case 49: case  97:  // 1
+        case 50: case  98:  // etc.
+        case 51: case  99:
+        case 52: case 100:
+        case 53: case 101:
+        case 54: case 102:
+        case 55: case 103:
+        case 56: case 104:
+        case 57: case 105: selectTool((event.keyCode - 48)%48 - 1); break
 
         case 37: movePlayer(0, 2); break  // <-
         case 38: movePlayer(0, 3); break  //  ^
@@ -584,6 +642,17 @@ function drawSpriteAt(context, x, y, what)
         context.lineWidth   = S/10
         context.strokeStyle = '#40ff40'
         context.strokeRect(x + 0.05*S, y + 0.05*S, 0.9*S, 0.9*S)
+        break
+
+    case GOAL1:
+    case GOAL2:
+        context.beginPath()
+        context.arc(x + S/2, y + S/2, 0.4*S, 0, Math.PI*2)
+        context.closePath()
+        context.setLineDash([S/10,S/10])
+        context.strokeStyle = what == GOAL1 ? 'rgba(160,0,0,0.5)' :  'rgba(0,0,160,0.5)'
+        context.lineWidth = S/20
+        context.stroke()
         break
 
     case WALL:
@@ -709,31 +778,21 @@ function render()
     var context = canvas.getContext("2d")
     context.clearRect(0, 0, canvas.width, canvas.height)
 
-    context.save()
-    for (var y = 0; y < 2; ++y)
+    for (var i = 0; i < tools.length; ++i)
     {
-        for (var x = 0; x < 3; ++x)
+        var x = i%3, y = 2 - (i - x)/3
+        if (i == selected_tool)
         {
-            context.save()
-            if (3*(1 - y) + x + 1 == selected_tool)
-            {
-                context.fillStyle = '#0000ff'
-                context.fillRect((1.1*x)*S, (1.1*y)*S, 1.2*S, 1.2*S)
-                context.clearRect((0.1 + 1.1*x)*S, (0.1 + 1.1*y)*S, S, S)
-            }
-            else
-            {
-                context.strokeStyle = '#c0c0c0'
-                context.strokeRect((0.1 + 1.1*x)*S, (0.1 + 1.1*y)*S, S, S)
-            }
-            context.restore()
+            context.fillStyle = '#0000ff'
+            context.fillRect((1.1*x)*S, (1.1*y)*S, 1.2*S, 1.2*S)
+            context.clearRect((0.1 + 1.1*x)*S, (0.1 + 1.1*y)*S, S, S)
         }
+        else
+        {
+            context.strokeStyle = '#c0c0c0'
+            context.strokeRect((0.1 + 1.1*x)*S, (0.1 + 1.1*y)*S, S, S)
+        }
+        drawSpriteAt(context, (0.1 + 1.1*x)*S, (0.1 + 1.1*y)*S, tools[i])
     }
-    drawSpriteAt(context, 0.1*S, 1.2*S, WALL)
-    drawSpriteAt(context, 2.3*S, 1.2*S, GOAL)
-
-    drawSpriteAt(context, 0.1*S, 0.1*S, BOX)
-    drawSpriteAt(context, 1.2*S, 0.1*S, PLAYER1)
-    drawSpriteAt(context, 2.3*S, 0.1*S, PLAYER2)
     context.restore()
 }
