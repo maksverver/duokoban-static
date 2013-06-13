@@ -1,6 +1,7 @@
 "use strict"
 
 /* TODO:
+    - option to make grid smaller/larger in edit mode
     - goal squares for players?
 */
 
@@ -197,7 +198,6 @@ function onCellClicked(x,y, dragged)
     default:
         return
     }
-    params.game = layersToString()
     updateHashFromState()
 }
 
@@ -208,11 +208,8 @@ function checkWinning()
     {
         for (var x = 0; x < W; ++x)
         {
-            if (layer0[y][x] == GOAL)
-            {
-                have_goals = true
-                if (layer1[y][x] != BOX) winning = false
-            }
+            if (layer0[y][x] == GOAL) have_goals = true
+            if ((layer0[y][x] == GOAL) != (layer1[y][x] == BOX)) winning = false
         }
     }
     if (winning && have_goals)
@@ -225,9 +222,20 @@ function checkWinning()
     }
 }
 
-function movePlayer(player)
+function movePlayer(player, new_dir)
 {
+    if (typeof(new_dir) != "undefined")
+    {
+        if (move_dir[player] == new_dir) return
+        if (new_dir < 0)
+        {
+            if (move_dir[player] != ~new_dir) return
+            new_dir = -1
+        }
+        move_dir[player] = new_dir
+    }
     if (move_dir[player] < 0) return
+
     var dx = DX[move_dir[player]]
     var dy = DY[move_dir[player]]
     var p = player + PLAYER1
@@ -396,6 +404,7 @@ function updateStateFromHash()
 
 function updateHashFromState()
 {
+    params.game = layersToString()
     document.location.hash = formatHash(params)
 }
 
@@ -404,13 +413,20 @@ function restart()
     queuePostAnimation(updateStateFromHash)
 }
 
-function select_tool(i)
+function selectTool(i)
 {
     if ((i < 0 || i > 6) || !params.edit) return
     if (i == 5 || i == 6)
     {
-        if (i != selected_tool) selected_tool = i
-        else grab_dir[i - 5] = -2 + (grab_dir[i - 5] == -2)
+        if (i != selected_tool)
+        {
+            selected_tool = i
+        }
+        else
+        {
+            grab_dir[i - 5] = -2 + (grab_dir[i - 5] == -2)
+            updateHashFromState()
+        }
     }
     else
     {
@@ -466,30 +482,30 @@ function initialize()
         fixEventOffset(event, tool_canvas)
         var x = parseInt((event.offsetX/S - 0.05)/1.1)
         var y = parseInt((event.offsetY/S - 0.05)/1.1)
-        select_tool(3*(1 - y) + x + 1)
+        selectTool(3*(1 - y) + x + 1)
     })
 
     document.addEventListener("keydown", function(event) {
         var handled = true
         switch (event.keyCode)
         {
-        case 48: case  96: select_tool(0); break  // 0
-        case 49: case  97: select_tool(1); break  // 1
-        case 50: case  98: select_tool(2); break  // 2
-        case 51: case  99: select_tool(3); break  // 3
-        case 52: case 100: select_tool(4); break  // 4
-        case 53: case 101: select_tool(5); break  // 5
-        case 54: case 102: select_tool(6); break  // 6
+        case 48: case  96: selectTool(0); break  // 0
+        case 49: case  97: selectTool(1); break  // 1
+        case 50: case  98: selectTool(2); break  // 2
+        case 51: case  99: selectTool(3); break  // 3
+        case 52: case 100: selectTool(4); break  // 4
+        case 53: case 101: selectTool(5); break  // 5
+        case 54: case 102: selectTool(6); break  // 6
 
-        case 37: move_dir[0] = 2; movePlayer(0); break  // <-
-        case 38: move_dir[0] = 3; movePlayer(0); break  //  ^
-        case 39: move_dir[0] = 0; movePlayer(0); break  // ->
-        case 40: move_dir[0] = 1; movePlayer(0); break  // v
+        case 37: movePlayer(0, 2); break  // <-
+        case 38: movePlayer(0, 3); break  //  ^
+        case 39: movePlayer(0, 0); break  // ->
+        case 40: movePlayer(0, 1); break  // v
 
-        case 87: move_dir[1] = 3; movePlayer(1); break  // W
-        case 65: move_dir[1] = 2; movePlayer(1); break  // A
-        case 83: move_dir[1] = 1; movePlayer(1); break  // S
-        case 68: move_dir[1] = 0; movePlayer(1); break  // D
+        case 87: movePlayer(1, 3); break  // W
+        case 65: movePlayer(1, 2); break  // A
+        case 83: movePlayer(1, 1); break  // S
+        case 68: movePlayer(1, 0); break  // D
 
         case 82: restart(); break  // R
 
@@ -501,15 +517,15 @@ function initialize()
         var handled = true
         switch (event.keyCode)
         {
-        case 37:
-        case 38:
-        case 39:
-        case 40: move_dir[0] = -1; break
+        case 37: movePlayer(0, ~2); break  // <-
+        case 38: movePlayer(0, ~3); break  //  ^
+        case 39: movePlayer(0, ~0); break  // ->
+        case 40: movePlayer(0, ~1); break  // v
 
-        case 87:
-        case 65:
-        case 83:
-        case 68: move_dir[1] = -1; break
+        case 87: movePlayer(1, ~3); break  // W
+        case 65: movePlayer(1, ~2); break  // A
+        case 83: movePlayer(1, ~1); break  // S
+        case 68: movePlayer(1, ~0); break  // D
         }
     })
 
