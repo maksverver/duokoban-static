@@ -2,14 +2,23 @@ body {
     background: white;
     color: black;
     margin: 0;
+
+    font: 11pt sans-serif;
+    text-align: center;
 }
 
-#GameCanvasHolder {
-    text-align: center;
+p {
+    margin: 1em;
 }
 
 #GameCanvas {
     margin: 1em;
-    background: #ddf;
+    background: #e0e0ff;
+    border: 1px solid #a0a0a0;
+}
+
+#ToolCanvas {
+    margin: 1em;
+    background: #e0e0ff;
     border: 1px solid #a0a0a0;
 }
