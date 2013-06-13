@@ -177,7 +177,7 @@ function createGrid(value)
     return grid
 }
 
-function findOnGrind(grid, val)
+function findOnGrid(grid, val)
 {
     for (var y = 0; y < H; ++y)
     {
@@ -274,7 +274,7 @@ function movePlayer(player, new_dir)
     var dx = DX[move_dir[player]]
     var dy = DY[move_dir[player]]
     var p = player + PLAYER1
-    var xy = findOnGrind(layer1, p)
+    var xy = findOnGrid(layer1, p)
     if (!xy) return
     var x1 = xy[0], x2 = x1 + dx, x3 = x2 + dx, x0 = x1 - dx
     var y1 = xy[1], y2 = y1 + dy, y3 = y2 + dy, y0 = y1 - dy
@@ -299,6 +299,13 @@ function movePlayer(player, new_dir)
         redraw()
     }
 
+    function lock(x,y)
+    {
+        layer1[y][x] = LOCKED
+        var dir = grab_dir[1 - player]
+        if (dir >= 0 && layer1[y - DY[dir]][x - DX[dir]] == PLAYER1 + (1 - player)) grab_dir[1 - player] = -1
+    }
+
     var new_grab_dir = -1
 
     if (inBounds(x2, y2) && layer0[y2][x2] != WALL)
@@ -310,7 +317,7 @@ function movePlayer(player, new_dir)
             {
                 // Pull!
                 var o = layer1[y0][x0]
-                layer1[y0][x0] = layer1[y1][x1] = layer1[y2][x2] = LOCKED
+                lock(x0,y0); lock(x1,y1); lock(x2,y2)
                 addAnimation(375, function(context, dt) {
                     var x = S*(x0 + dt*(x1 - x0))
                     var y = S*(y0 + dt*(y1 - y0))
@@ -330,7 +337,7 @@ function movePlayer(player, new_dir)
             else
             {
                 // Just walk.
-                layer1[y1][x1] = layer1[y2][x2] = LOCKED
+                lock(x1,y1); lock(x2,y2)
                 addAnimation(250, function(context, dt) {
                     var x = S*(x1 + dt*(x2 - x1))
                     var y = S*(y1 + dt*(y2 - y1))
@@ -349,7 +356,7 @@ function movePlayer(player, new_dir)
             {
                 // Push!
                 var o = layer1[y2][x2]
-                layer1[y1][x1] = layer1[y2][x2] = layer1[y3][x3] = LOCKED
+                lock(x1,y1); lock(x2,y2); lock(x3,y3)
                 addAnimation(375, function(context, dt) {
                     var x = S*(x1 + dt*(x2 - x1))
                     var y = S*(y1 + dt*(y2 - y1))
@@ -594,6 +601,12 @@ function drawSpriteAt(context, x, y, what)
 
     case PLAYER1:
     case PLAYER2:
+        var player = what - PLAYER1
+        if (grab_dir[player] >= 0)
+        {
+            x += 0.2*S*DX[grab_dir[player]]
+            y += 0.2*S*DY[grab_dir[player]]
+        } 
         context.beginPath()
         context.arc(x + S/2, y + S/2, 0.4*S, 0, Math.PI*2)
         context.closePath()
@@ -659,14 +672,7 @@ function render()
         {
             if (layer1[y][x] > EMPTY)
             {
-                var sx = S*x, sy = S*y
-                var player = layer1[y][x] - PLAYER1
-                if (player >= 0 && grab_dir[player] >= 0)
-                {
-                    sx += 0.15*S*DX[grab_dir[player]]
-                    sy += 0.15*S*DY[grab_dir[player]]
-                }
-                drawSpriteAt(context, sx, sy, layer1[y][x])
+                drawSpriteAt(context, S*x, S*y, layer1[y][x])
             }
         }
     }
