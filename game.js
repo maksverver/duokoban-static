@@ -36,6 +36,41 @@ var animations      = []
 var post_animations = []
 var winning_time    = -1
 
+function reframe()
+{
+    var x1 = W, y1 = H, x2 = 0, y2 = 0
+    for (var x = 0; x < W; ++x)
+    {
+        for (var y = 0; y < H; ++y)
+        {
+            if (layer0[y][x] != WALL || layer1[y][x] != EMPTY)
+            {
+                if (x < x1) x1 = x
+                if (x > x2) x2 = x
+                if (y < y1) y1 = y
+                if (y > y2) y2 = y
+            }
+        }
+    }
+    if (x1 > x2  || y1 > y2) return
+    H = y2 - y1 + 3
+    W = x2 - x1 + 3
+    var new_layer0 = createGrid(WALL)
+    var new_layer1 = createGrid(EMPTY)
+    for (var x = x1; x <= x2; ++x)
+    {
+        for (var y = y1; y <= y2; ++y)
+        {
+            new_layer0[y - y1 + 1][x - x1 + 1] = layer0[y][x]
+            new_layer1[y - y1 + 1][x - x1 + 1] = layer1[y][x]
+        }
+    }
+    layer0 = new_layer0
+    layer1 = new_layer1
+    updateHashFromState()
+    redraw()
+}
+
 function layersToString()
 {
     var res = "", val = 0, bits = 0
