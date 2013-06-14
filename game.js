@@ -657,7 +657,8 @@ function drawSpriteAt(context, x, y, what)
         if (context.setLineDash)
         {
             // not all browsers support setLineDash apparantly:
-            context.setLineDash([S/10,S/10])
+            var circumference = Math.PI*2*0.4*S
+            context.setLineDash([circumference*0.07, circumference*0.03])
         }
         context.strokeStyle = what == GOAL1 ? 'rgba(160,0,0,0.5)' :  'rgba(0,0,160,0.5)'
         context.lineWidth = S/20
