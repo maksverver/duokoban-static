@@ -9,10 +9,22 @@
     ><canvas width="136" height="136" id="ToolCanvas"></canvas></div>
 <script type="text/javascript" src="game.js"></script>
 <p>Put the green boxes inside the green squares. Plain guy pushes, striped guy pulls.<br>
-   Controls: Cursor keys for red player. W/A/S/D for blue player. R to restart.</p>
+   Controls: Cursor keys for red player. W/A/S/D for blue player. Tab to swap control. R to restart.</p>
 <p><a href="javascript:setEditMode(!getEditMode())">Edit/play</a> -
-   <a href="javascript:setLevelCode(prompt('Level code:', getLevelCode()))">Import/export</a> -
-   Example games: <a href="#game=DFCpICAVVAER0">1</a>
-                  <a href="#game=GFCAAFIRllAQBNABIREhAQ">2</a></p>
+   <a href="javascript:setLevelCode(prompt('Level code:', getLevelCode()))">Import/export</a> - Example games:
+   <select onChange="setLevelCode(value)">
+     <option value="KKEAAkpBQEIJRghqSCJpKGISSgIA6OB" selected>Cross by Brend</option>
+     <option value="DFENzMUVRS6C">Introduction by Maks</option>
+     <option value="GFEoMpaqhSXiJJZI">|+ (easy) by Maks</option>
+     <option value="GFEoMpaqhy7SMJJDB">|+ (hard) by Maks</option>
+     <option value="MJEAAkEmqq0NAJBIArqArJBYqaAr1CYmFwazC">Untitled 1 by Marius</option>
+     <option value="FGEASSIE6WTD">Unitled 2 by Marius</option>
+     <option value="FIEAQTluIhESGJ">Unitled 3 by Marius</option>
+     <option value="IHEAkkESb6GSlKERITmQEB">Unititled 4 by Marius</option>
+     <option value="PUEAAAAgkkAoqEeEEAV1NJJJJTyEUVCIEJBgkIEBAqEZykAAJFTCAkUpikBAiQkEASiQAJzgUJVSSSSOzAIIaIZGAJJB">Zero One Accept by Hiroyuki Imabayashi &amp; Marius</option>
+     <option value="IJCAAAAAAQkgAdAQFSIRBQFgARBQFgARBQESIRAAAQB">Move, Fool by Brend?</option>
+     <option value="POEJJJJBEJJJJBRSSEBhEEBJJJJRQEIRQkkkEBkEBBJCBBISSkEJJJRUJSQIqKSkEJaquwMDAYOP">Tetris by Bouke-Willem</option>
+   </select>
+</p>
 </body>
 </html>
