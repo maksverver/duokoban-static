@@ -1,12 +1,5 @@
 "use strict"
 
-/* TODO:
-    - add more default levels!
-    - easier way to share levels?
-    - maybe: internet multiplayer?
-    - remove all the grab-related nonsense if the current controls suffice
-*/
-
 var DX = [ +1,  0, -1,  0 ]
 var DY = [  0, +1,  0, -1 ]
 
