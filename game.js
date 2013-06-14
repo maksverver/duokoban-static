@@ -646,7 +646,11 @@ function drawSpriteAt(context, x, y, what)
         context.beginPath()
         context.arc(x + S/2, y + S/2, 0.4*S, 0, Math.PI*2)
         context.closePath()
-        context.setLineDash([S/10,S/10])
+        if (context.setLineDash)
+        {
+            // not all browsers support setLineDash apparantly:
+            context.setLineDash([S/10,S/10])
+        }
         context.strokeStyle = what == GOAL1 ? 'rgba(160,0,0,0.5)' :  'rgba(0,0,160,0.5)'
         context.lineWidth = S/20
         context.stroke()
