@@ -350,8 +350,14 @@ function movePlayer(player, new_dir)
     function lock(x,y)
     {
         layer1[y][x] = LOCKED
-        var dir = grab_dir[1 - player]
-        if (dir >= 0 && layer1[y - DY[dir]][x - DX[dir]] == PLAYER1 + (1 - player)) grab_dir[1 - player] = -1
+        var other = 1 - player
+        var dir = grab_dir[other]
+        if (dir >= 0)
+        {
+            var xx = x - DX[dir]
+            var yy = y - DY[dir]
+            if (inBounds(xx, yy) && layer1[yy][xx] == PLAYER1 + other) grab_dir[other] = -1
+        }
     }
 
     function onMoveComplete()
