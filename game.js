@@ -4,6 +4,7 @@
     - add more default levels!
     - easier way to share levels?
     - maybe: internet multiplayer?
+    - remove all the grab-related nonsense if the current controls suffice
 */
 
 var DX = [ +1,  0, -1,  0 ]
@@ -370,6 +371,7 @@ function movePlayer(player, new_dir)
 
     var new_grab_dir = -1
 
+/*
     if (inBounds(x2, y2) && layer0[y2][x2] != WALL)
     {
         if (layer1[y2][x2] == EMPTY)
@@ -440,6 +442,66 @@ function movePlayer(player, new_dir)
     {
         grab_dir[player] = new_grab_dir
         redraw()
+    }
+*/
+    if (inBounds(x2, y2) && layer0[y2][x2] != WALL)
+    {
+        if (layer1[y2][x2] == EMPTY)
+        {
+            // Just walk.
+            lock(x1,y1); lock(x2,y2)
+            addAnimation(250, function(context, dt) {
+                var x = S*(x1 + dt*(x2 - x1))
+                var y = S*(y1 + dt*(y2 - y1))
+                drawSpriteAt(context, parseInt(x), parseInt(y), p)
+            }, function() {
+                layer1[y1][x1] = EMPTY
+                layer1[y2][x2] = p
+                onMoveComplete()
+            })
+        }
+        else
+        if (layer1[y2][x2] > EMPTY)
+        {
+            if (grab_dir[player] == -2 && inBounds(x3, y3) && layer0[y3][x3] != WALL && layer1[y3][x3] == EMPTY)
+            {
+                // Push!
+                var o = layer1[y2][x2]
+                lock(x1,y1); lock(x2,y2); lock(x3,y3)
+                addAnimation(375, function(context, dt) {
+                    var x = S*(x1 + dt*(x2 - x1))
+                    var y = S*(y1 + dt*(y2 - y1))
+                    drawSpriteAt(context, parseInt(x), parseInt(y), p)
+                    var x = S*(x2 + dt*(x3 - x2))
+                    var y = S*(y2 + dt*(y3 - y2))
+                    drawSpriteAt(context, parseInt(x), parseInt(y), o)
+                }, function() {
+                    layer1[y1][x1] = EMPTY
+                    layer1[y2][x2] = p
+                    layer1[y3][x3] = o
+                    onMoveComplete()
+                })
+            }
+            if (grab_dir[player] == -1 && inBounds(x0, y0) && layer0[y0][x0] != WALL && layer1[y0][x0] == EMPTY)
+            {
+                // Pull!
+                var o = layer1[y2][x2]
+                lock(x0,y0); lock(x1,y1); lock(x2,y2)
+                addAnimation(375, function(context, dt) {
+                    var x = S*(x1 + dt*(x0 - x1))
+                    var y = S*(y1 + dt*(y0 - y1))
+                    drawSpriteAt(context, parseInt(x), parseInt(y), p)
+                    var x = S*(x2 + dt*(x1 - x2))
+                    var y = S*(y2 + dt*(y1 - y2))
+                    drawSpriteAt(context, parseInt(x), parseInt(y), o)
+                }, function() {
+                    layer1[y0][x0] = p
+                    layer1[y1][x1] = o
+                    layer1[y2][x2] = EMPTY
+                    onMoveComplete()
+                })
+            }
+        }
     }
 }
 
