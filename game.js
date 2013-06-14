@@ -509,6 +509,37 @@ function updateHashFromState()
     document.location.hash = formatHash(params)
 }
 
+function getLevelCode()
+{
+    return params.game
+}
+
+function setLevelCode(arg)
+{
+    if (arg)
+    {
+        queuePostAnimation(function(){
+            stringToLayers(arg)
+            updateHashFromState()
+         })
+    }
+}
+
+function getEditMode()
+{
+    return !!params.edit
+}
+
+function setEditMode(arg)
+{
+    if (arg == getEditMode()) return
+    updateStateFromHash()
+    if (arg) params.edit = 1
+    else delete params.edit
+    updateHashFromState()
+    updateStateFromHash()
+}
+
 function restart()
 {
     queuePostAnimation(updateStateFromHash)

@@ -3,14 +3,15 @@
 <title>Duokoban</title>
 <link rel="stylesheet" type="text/css" href="style.css">
 </head>
-<body onload="initialize()">
+<body onload="initialize();setLevelCode('KKEAgkkkESSSSIJJJhkkkESSSSIJJJhkkkESSSS')">
 <div id="GameCanvasHolder"
     ><canvas width="400" height="440" id="GameCanvas"></canvas
     ><canvas width="136" height="136" id="ToolCanvas"></canvas></div>
 <script type="text/javascript" src="game.js"></script>
 <p>Put the green boxes inside the green squares. Plain guy pushes, striped guy pulls.<br>
    Controls: Cursor keys for red player. W/A/S/D for blue player. R to restart.</p>
-<p><a href="#game=KKEAgkkkESSSSIJJJhkkkESSSSIJJJhkkkESSSS&edit=1&amp;edit=1">Edit Blank</a> -
+<p><a href="javascript:setEditMode(!getEditMode())">Edit/play</a> -
+   <a href="javascript:setLevelCode(prompt('Level code:', getLevelCode()))">Import/export</a> -
    Example games: <a href="#game=DFCpICAVVAER0">1</a>
                   <a href="#game=GFCAAFIRllAQBNABIREhAQ">2</a></p>
 </body>
