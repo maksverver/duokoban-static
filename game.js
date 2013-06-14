@@ -272,7 +272,7 @@ function onCellClicked(x,y, dragged)
     case PLAYER1:
     case PLAYER2:
         if (layer1[y][x] == tool) { layer1[y][x] = EMPTY; break }
-        if (layer0[y][x] == OPEN && layer1[y][x] == EMPTY) { replaceOnGrid(layer1, tool, EMPTY); layer1[y][x] = tool; break }
+        if (layer0[y][x] != WALL && layer1[y][x] == EMPTY) { replaceOnGrid(layer1, tool, EMPTY); layer1[y][x] = tool; break }
         return
     default:
         return
