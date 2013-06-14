@@ -37,6 +37,7 @@ var selected_tool   = -1
 var animations      = []
 var post_animations = []
 var winning_time    = -1
+var swap_controls   = 0
 
 var tools = [ WALL,  OPEN,    REFRAME,
               GOAL,  GOAL1,   GOAL2,
@@ -679,6 +680,8 @@ function initialize(level_code)
 
         switch (event.keyCode)
         {
+        case 9: swap_controls = !swap_controls; redraw(); break  // tab
+
         case 48: case  96:  // 0
         case 49: case  97:  // 1
         case 50: case  98:  // etc.
@@ -690,15 +693,15 @@ function initialize(level_code)
         case 56: case 104:
         case 57: case 105: selectTool((event.keyCode - 48)%48 - 1); break
 
-        case 37: movePlayer(0, 2); break  // <-
-        case 38: movePlayer(0, 3); break  //  ^
-        case 39: movePlayer(0, 0); break  // ->
-        case 40: movePlayer(0, 1); break  // v
+        case 37: movePlayer(0 + swap_controls, 2); break  // <-
+        case 38: movePlayer(0 + swap_controls, 3); break  //  ^
+        case 39: movePlayer(0 + swap_controls, 0); break  // ->
+        case 40: movePlayer(0 + swap_controls, 1); break  // v
 
-        case 87: movePlayer(1, 3); break  // W
-        case 65: movePlayer(1, 2); break  // A
-        case 83: movePlayer(1, 1); break  // S
-        case 68: movePlayer(1, 0); break  // D
+        case 87: movePlayer(1 - swap_controls, 3); break  // W
+        case 65: movePlayer(1 - swap_controls, 2); break  // A
+        case 83: movePlayer(1 - swap_controls, 1); break  // S
+        case 68: movePlayer(1 - swap_controls, 0); break  // D
 
         case 82: restart(); break  // R
 
@@ -710,21 +713,35 @@ function initialize(level_code)
         var handled = true
         switch (event.keyCode)
         {
-        case 37: movePlayer(0, ~2); break  // <-
-        case 38: movePlayer(0, ~3); break  //  ^
-        case 39: movePlayer(0, ~0); break  // ->
-        case 40: movePlayer(0, ~1); break  // v
+        case 37: movePlayer(0 + swap_controls, ~2); break  // <-
+        case 38: movePlayer(0 + swap_controls, ~3); break  //  ^
+        case 39: movePlayer(0 + swap_controls, ~0); break  // ->
+        case 40: movePlayer(0 + swap_controls, ~1); break  // v
 
-        case 87: movePlayer(1, ~3); break  // W
-        case 65: movePlayer(1, ~2); break  // A
-        case 83: movePlayer(1, ~1); break  // S
-        case 68: movePlayer(1, ~0); break  // D
+        case 87: movePlayer(1 - swap_controls, ~3); break  // W
+        case 65: movePlayer(1 - swap_controls, ~2); break  // A
+        case 83: movePlayer(1 - swap_controls, ~1); break  // S
+        case 68: movePlayer(1 - swap_controls, ~0); break  // D
         }
     })
 
     if (document.location.hash) updateStateFromHash()
     else setLevelCode(level_code)
     window.onhashchange = function() { queuePostAnimation(updateStateFromHash) }
+}
+
+function getFillStyle(what, a)
+{
+    if (!a) a = 1
+    if (what == PLAYER1 + swap_controls) return 'rgba(255,0,0,' + a + ')'
+    if (what == PLAYER2 - swap_controls) return 'rgba(0,96,255,' + a + ')'
+}
+
+function getStrokeStyle(what, a)
+{
+    if (!a) a = 1
+    if (what == PLAYER1 + swap_controls) return 'rgba(160,0,0,' + a + ')'
+    if (what == PLAYER2 - swap_controls) return 'rgba(0,0,160,' + a + ')'
 }
 
 function drawSpriteAt(context, x, y, what)
@@ -749,7 +766,7 @@ function drawSpriteAt(context, x, y, what)
             var circumference = Math.PI*2*0.4*S
             context.setLineDash([circumference*0.07, circumference*0.03])
         }
-        context.strokeStyle = what == GOAL1 ? 'rgba(160,0,0,0.5)' :  'rgba(0,0,160,0.5)'
+        context.strokeStyle = getStrokeStyle(what - GOAL1 + PLAYER1, 0.5)
         context.lineWidth = S/20
         context.stroke()
         break
@@ -778,9 +795,9 @@ function drawSpriteAt(context, x, y, what)
         context.beginPath()
         context.arc(x + S/2, y + S/2, 0.4*S, 0, Math.PI*2)
         context.closePath()
-        context.fillStyle = what == PLAYER1 ? '#ff0000' :  '#0060ff'
+        context.fillStyle = getFillStyle(what)
         context.fill()
-        context.strokeStyle = what == PLAYER1 ? '#a00000' :  '#0000a0'
+        context.strokeStyle = getStrokeStyle(what)
         context.lineWidth = S/20
         context.stroke()
         if (grab_dir[what - PLAYER1] > -2)
