@@ -569,7 +569,7 @@ function selectTool(i)
     redraw()
 }
 
-function initialize()
+function initialize(level_code)
 {
     function fixEventOffset(event, element)
     {
@@ -667,7 +667,8 @@ function initialize()
         }
     })
 
-    updateStateFromHash()
+    if (document.location.hash) updateStateFromHash()
+    else setLevelCode(level_code)
     window.onhashchange = function() { queuePostAnimation(updateStateFromHash) }
 }
 
