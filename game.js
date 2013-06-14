@@ -290,7 +290,6 @@ function checkWinning()
             if (layer0[y][x] >= GOAL)
             {
                 have_goals = true
-                console.log((layer1[y][x] - BOX) + "?" +  (layer0[y][x] - GOAL))
                 if (layer1[y][x] - BOX != layer0[y][x] - GOAL) winning = false
             }
         }
