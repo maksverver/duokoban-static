@@ -1,7 +1,6 @@
 "use strict"
 
 /* TODO:
-    - should call playerMove for both players at end of animation!
     - add more default levels!
     - easier way to share levels?
     - maybe: internet multiplayer?
@@ -355,6 +354,13 @@ function movePlayer(player, new_dir)
         if (dir >= 0 && layer1[y - DY[dir]][x - DX[dir]] == PLAYER1 + (1 - player)) grab_dir[1 - player] = -1
     }
 
+    function onMoveComplete()
+    {
+        checkWinning()
+        movePlayer(0)
+        movePlayer(1)
+    }
+
     var new_grab_dir = -1
 
     if (inBounds(x2, y2) && layer0[y2][x2] != WALL)
@@ -378,8 +384,7 @@ function movePlayer(player, new_dir)
                     layer1[y0][x0] = EMPTY
                     layer1[y1][x1] = o
                     layer1[y2][x2] = p
-                    checkWinning()
-                    movePlayer(player)
+                    onMoveComplete()
                 })
                 new_grab_dir = grab_dir[player]  // hold onto pulled block
             }
@@ -394,8 +399,7 @@ function movePlayer(player, new_dir)
                 }, function() {
                     layer1[y1][x1] = EMPTY
                     layer1[y2][x2] = p
-                    checkWinning()
-                    movePlayer(player)
+                    onMoveComplete()
                 })
             }
         }
@@ -418,8 +422,7 @@ function movePlayer(player, new_dir)
                     layer1[y1][x1] = EMPTY
                     layer1[y2][x2] = p
                     layer1[y3][x3] = o
-                    checkWinning()
-                    movePlayer(player)
+                    onMoveComplete()
                 })
             }
             if (grab_dir[player] != move_dir[player]) new_grab_dir = move_dir[player]
