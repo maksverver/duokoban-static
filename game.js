@@ -362,8 +362,10 @@ function movePlayer(player, new_dir)
     function onMoveComplete()
     {
         checkWinning()
-        movePlayer(0)
-        movePlayer(1)
+        for (var i = 0; i < 2; ++i)
+        {
+            if (grab_dir[i] != move_dir[i]) movePlayer(i)
+        }
     }
 
     var new_grab_dir = -1
