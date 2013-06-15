@@ -10,6 +10,9 @@
 <script type="text/javascript" src="game.js"></script>
 <p>Put the green boxes inside the green squares. Plain guy pushes, striped guy pulls.<br>
    Controls: Cursor keys for red player. W/A/S/D for blue player. Tab to swap control. R to restart.</p>
+<p id="Winning" style="display:none">
+   You won! <a href="javascript:invertGame()">Play in reverse</a>.
+</p>
 <p><a href="javascript:setEditMode(!getEditMode())">Edit/play</a> -
    <a href="javascript:setLevelCode(prompt('Level code:', getLevelCode()))">Import/export</a> - Example games:
    <select onChange="setLevelCode(value);blur()">

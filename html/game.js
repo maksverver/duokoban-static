@@ -117,7 +117,7 @@ function layersToString()
     return res.replace(/A*$/, "")
 }
 
-function stringToLayers(arg)
+function decodeGameString(arg)
 {
     var pos = 0, val = 0, bits = 0 
     function get(n)
@@ -138,10 +138,11 @@ function stringToLayers(arg)
         while (get(1)) ++i
         return i
     }
-    H = get(6)
-    W = get(6)
-    layer0 = createGrid(WALL)
-    layer1 = createGrid(EMPTY)
+    var H = get(6)
+    var W = get(6)
+    var layer0 = createGrid(WALL, W, H)
+    var layer1 = createGrid(EMPTY, W, H)
+    var grab_dir = [ -2, -2 ]
     var info = get(6)
     if (info < 4)
     {
@@ -172,9 +173,45 @@ function stringToLayers(arg)
             }
         }
     }
+    return { height: H, width: W, layer0: layer0, layer1: layer1, grab_dir: grab_dir }
+}
+
+function stringToLayers(arg)
+{
+    var obj = decodeGameString(arg)
+    W = obj.width
+    H = obj.height
+    layer0 = obj.layer0
+    layer1 = obj.layer1
+    grab_dir = obj.grab_dir
     var canvas = document.getElementById("GameCanvas")
     canvas.width  = W*S
     canvas.height = H*S
+}
+
+function invertGame()
+{
+    var initial = decodeGameString(params.game)
+    for (var y = 0; y < H; ++y)
+    {
+        for (var x = 0; x < W; ++x)
+        {
+            if (layer0[y][x] == WALL) continue
+            switch (initial.layer1[y][x])
+            {
+            case BOX:     layer0[y][x] = GOAL; break
+            case PLAYER1: layer0[y][x] = GOAL1; break;
+            case PLAYER2: layer0[y][x] = GOAL2; break;
+            case EMPTY:   layer0[y][x] = OPEN; break
+            }
+        }
+    }
+    for (var i = 0; i < 2; ++i)
+    {
+        grab_dir[i] = (initial.grab_dir[i] == -2) ? -1 : -2
+    }
+    setLevelCode(layersToString())
+    redraw()
 }
 
 var frame_requested = false
@@ -202,13 +239,15 @@ function inBounds(x, y)
            0 <= y && y < H
 }
 
-function createGrid(value)
+function createGrid(value, w, h)
 {
+    if (typeof w == 'undefined') w = W
+    if (typeof h == 'undefined') h = H
     var grid = []
-    for (var y = 0; y < H; ++y)
+    for (var y = 0; y < h; ++y)
     {
         grid.push([])
-        for (var x = 0; x < W; ++x)
+        for (var x = 0; x < w; ++x)
         {
             grid[y].push(value)
         }
@@ -293,10 +332,12 @@ function checkWinning()
     if (winning && have_goals)
     {
         if (winning_time < 0) winning_time = new Date().getTime()
+        document.getElementById('Winning').style.display = 'block'
     }
     else
     {
         winning_time = -1
+        document.getElementById('Winning').style.display = 'none'
     }
 }
 
