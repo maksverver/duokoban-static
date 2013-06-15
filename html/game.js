@@ -33,6 +33,7 @@ var layer1 = createGrid(EMPTY)
 
 var move_dir        = [ -1, -1 ]
 var grab_dir        = [ -2, -1 ]   // -1: no grab.  -2: can't grab.
+var explicit_move   = [ false, false ]
 var selected_tool   = -1
 var animations      = []
 var post_animations = []
@@ -299,22 +300,33 @@ function checkWinning()
     }
 }
 
-function movePlayer(player, new_dir)
+function movePlayer(player, new_dir, walking)
 {
     if (typeof(new_dir) != "undefined")
     {
+        // Keyboard repeat may cause another keydown event to be sent before key goes up.
+        // IMO this is the wrong behaviour (keyboard repeat should affect only keypress,
+        // not keydown/keyup) so just ignore those:
         if (move_dir[player] == new_dir) return
+
+        // If new_dir is negative, a key has been released.
         if (new_dir < 0)
         {
+            // Only cancel direction if the same key is currently held down, so we
+            // don't cancel a movement if the old key is released after the new key
+            // is pressed.
             if (move_dir[player] != ~new_dir) return
             new_dir = -1
         }
         move_dir[player] = new_dir
+        explicit_move[player] = true
     }
-    if (move_dir[player] < 0) return
 
-    var dx = DX[move_dir[player]]
-    var dy = DY[move_dir[player]]
+    var cur_dir = move_dir[player]
+    if (cur_dir < 0) return
+
+    var dx = DX[cur_dir]
+    var dy = DY[cur_dir]
     var p = player + PLAYER1
     var xy = findOnGrid(layer1, p)
     if (!xy) return
@@ -354,12 +366,12 @@ function movePlayer(player, new_dir)
         }
     }
 
-    function onMoveComplete()
+    function onMoveComplete(walking)
     {
         checkWinning()
         for (var i = 0; i < 2; ++i)
         {
-            if (grab_dir[i] != move_dir[i]) movePlayer(i)
+            if (grab_dir[i] != move_dir[i]) movePlayer(i, undefined, walking)
         }
     }
 
@@ -451,11 +463,11 @@ function movePlayer(player, new_dir)
             }, function() {
                 layer1[y1][x1] = EMPTY
                 layer1[y2][x2] = p
-                onMoveComplete()
+                onMoveComplete(true)
             })
         }
         else
-        if (layer1[y2][x2] > EMPTY)
+        if (layer1[y2][x2] > EMPTY && (!walking || explicit_move[player]))
         {
             if (grab_dir[player] == -2 && inBounds(x3, y3) && layer0[y3][x3] != WALL && layer1[y3][x3] == EMPTY)
             {
@@ -473,7 +485,7 @@ function movePlayer(player, new_dir)
                     layer1[y1][x1] = EMPTY
                     layer1[y2][x2] = p
                     layer1[y3][x3] = o
-                    onMoveComplete()
+                    onMoveComplete(false)
                 })
             }
             if (grab_dir[player] == -1 && inBounds(x0, y0) && layer0[y0][x0] != WALL && layer1[y0][x0] == EMPTY)
@@ -492,11 +504,12 @@ function movePlayer(player, new_dir)
                     layer1[y0][x0] = p
                     layer1[y1][x1] = o
                     layer1[y2][x2] = EMPTY
-                    onMoveComplete()
+                    onMoveComplete(false)
                 })
             }
         }
     }
+    explicit_move[player] = false
 }
 
 function parseHash(hash)
