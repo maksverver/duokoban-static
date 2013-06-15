@@ -817,18 +817,9 @@ function drawSpriteAt(context, x, y, what)
 
     case GOAL1:
     case GOAL2:
-        context.beginPath()
-        context.arc(x + S/2, y + S/2, 0.4*S, 0, Math.PI*2)
-        context.closePath()
-        if (context.setLineDash)
-        {
-            // not all browsers support setLineDash apparantly:
-            var circumference = Math.PI*2*0.4*S
-            context.setLineDash([circumference*0.07, circumference*0.03])
-        }
-        context.strokeStyle = getStrokeStyle(what - GOAL1 + PLAYER1, 0.5)
-        context.lineWidth = S/20
-        context.stroke()
+        context.lineWidth   = S/10
+        context.strokeStyle = getFillStyle(what - GOAL1 + PLAYER1)
+        context.strokeRect(x + 0.05*S, y + 0.05*S, 0.9*S, 0.9*S)
         break
 
     case WALL:
@@ -987,7 +978,7 @@ function render()
         var x = i%3, y = 2 - (i - x)/3
         if (i == selected_tool)
         {
-            context.fillStyle = '#0000ff'
+            context.fillStyle = '#8000ff'
             context.fillRect((1.1*x)*S, (1.1*y)*S, 1.2*S, 1.2*S)
             context.clearRect((0.1 + 1.1*x)*S, (0.1 + 1.1*y)*S, S, S)
         }
