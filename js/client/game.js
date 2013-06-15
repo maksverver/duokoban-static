@@ -3,6 +3,8 @@
 var DX = [ +1,  0, -1,  0 ]
 var DY = [  0, +1,  0, -1 ]
 
+var control_scheme = 1
+
 // Layer 0 values:
 var WALL  = 0
 var OPEN  = 1
@@ -34,6 +36,7 @@ var layer1 = createGrid(EMPTY)
 var move_dir        = [ -1, -1 ]
 var grab_dir        = [ -2, -1 ]   // -1: no grab.  -2: can't grab.
 var explicit_move   = [ false, false ]
+
 var selected_tool   = -1
 var animations      = []
 var post_animations = []
@@ -417,33 +420,85 @@ function movePlayer(player, new_dir, walking)
 
     var new_grab_dir = -1
 
-/*
-    if (inBounds(x2, y2) && layer0[y2][x2] != WALL)
+    if (control_scheme == 1)
     {
-        if (layer1[y2][x2] == EMPTY)
+        if (inBounds(x2, y2) && layer0[y2][x2] != WALL)
         {
-            if (grab_dir[player] == (move_dir[player] + 2)%4 &&
-                inBounds(x0, y0) && layer1[y0][x0] > EMPTY)
+            if (layer1[y2][x2] == EMPTY)
             {
-                // Pull!
-                var o = layer1[y0][x0]
-                lock(x0,y0); lock(x1,y1); lock(x2,y2)
-                addAnimation(375, function(context, dt) {
-                    var x = S*(x0 + dt*(x1 - x0))
-                    var y = S*(y0 + dt*(y1 - y0))
-                    drawSpriteAt(context, parseInt(x), parseInt(y), o)
-                    var x = S*(x1 + dt*(x2 - x1))
-                    var y = S*(y1 + dt*(y2 - y1))
-                    drawSpriteAt(context, parseInt(x), parseInt(y), p)
-                }, function() {
-                    layer1[y0][x0] = EMPTY
-                    layer1[y1][x1] = o
-                    layer1[y2][x2] = p
-                    onMoveComplete()
-                })
-                new_grab_dir = grab_dir[player]  // hold onto pulled block
+                if (grab_dir[player] == (move_dir[player] + 2)%4 &&
+                    inBounds(x0, y0) && layer1[y0][x0] > EMPTY)
+                {
+                    // Pull!
+                    var o = layer1[y0][x0]
+                    lock(x0,y0); lock(x1,y1); lock(x2,y2)
+                    addAnimation(375, function(context, dt) {
+                        var x = S*(x0 + dt*(x1 - x0))
+                        var y = S*(y0 + dt*(y1 - y0))
+                        drawSpriteAt(context, parseInt(x), parseInt(y), o)
+                        var x = S*(x1 + dt*(x2 - x1))
+                        var y = S*(y1 + dt*(y2 - y1))
+                        drawSpriteAt(context, parseInt(x), parseInt(y), p)
+                    }, function() {
+                        layer1[y0][x0] = EMPTY
+                        layer1[y1][x1] = o
+                        layer1[y2][x2] = p
+                        onMoveComplete(false)
+                    })
+                    new_grab_dir = grab_dir[player]  // hold onto pulled block
+                }
+                else
+                {
+                    // Just walk.
+                    lock(x1,y1); lock(x2,y2)
+                    addAnimation(250, function(context, dt) {
+                        var x = S*(x1 + dt*(x2 - x1))
+                        var y = S*(y1 + dt*(y2 - y1))
+                        drawSpriteAt(context, parseInt(x), parseInt(y), p)
+                    }, function() {
+                        layer1[y1][x1] = EMPTY
+                        layer1[y2][x2] = p
+                        onMoveComplete(true)
+                    })
+                }
             }
             else
+            if (layer1[y2][x2] > EMPTY && (!walking || explicit_move[player]))
+            {
+                if (grab_dir[player] == -2 && inBounds(x3, y3) && layer0[y3][x3] != WALL && layer1[y3][x3] == EMPTY)
+                {
+                    // Push!
+                    var o = layer1[y2][x2]
+                    lock(x1,y1); lock(x2,y2); lock(x3,y3)
+                    addAnimation(375, function(context, dt) {
+                        var x = S*(x1 + dt*(x2 - x1))
+                        var y = S*(y1 + dt*(y2 - y1))
+                        drawSpriteAt(context, parseInt(x), parseInt(y), p)
+                        var x = S*(x2 + dt*(x3 - x2))
+                        var y = S*(y2 + dt*(y3 - y2))
+                        drawSpriteAt(context, parseInt(x), parseInt(y), o)
+                    }, function() {
+                        layer1[y1][x1] = EMPTY
+                        layer1[y2][x2] = p
+                        layer1[y3][x3] = o
+                        onMoveComplete(false)
+                    })
+                }
+                if (grab_dir[player] != move_dir[player]) new_grab_dir = move_dir[player]
+            }
+        }
+
+        if (grab_dir[player] > -2 && new_grab_dir != grab_dir[player])
+        {
+            grab_dir[player] = new_grab_dir
+            redraw()
+        }
+    }
+    else
+    {
+        if (inBounds(x2, y2) && layer0[y2][x2] != WALL)
+        {
+            if (layer1[y2][x2] == EMPTY)
             {
                 // Just walk.
                 lock(x1,y1); lock(x2,y2)
@@ -454,98 +509,50 @@ function movePlayer(player, new_dir, walking)
                 }, function() {
                     layer1[y1][x1] = EMPTY
                     layer1[y2][x2] = p
-                    onMoveComplete()
+                    onMoveComplete(true)
                 })
             }
-        }
-        else
-        if (layer1[y2][x2] > EMPTY)
-        {
-            if (grab_dir[player] == -2 && inBounds(x3, y3) && layer0[y3][x3] != WALL && layer1[y3][x3] == EMPTY)
+            else
+            if (layer1[y2][x2] > EMPTY && (!walking || explicit_move[player]))
             {
-                // Push!
-                var o = layer1[y2][x2]
-                lock(x1,y1); lock(x2,y2); lock(x3,y3)
-                addAnimation(375, function(context, dt) {
-                    var x = S*(x1 + dt*(x2 - x1))
-                    var y = S*(y1 + dt*(y2 - y1))
-                    drawSpriteAt(context, parseInt(x), parseInt(y), p)
-                    var x = S*(x2 + dt*(x3 - x2))
-                    var y = S*(y2 + dt*(y3 - y2))
-                    drawSpriteAt(context, parseInt(x), parseInt(y), o)
-                }, function() {
-                    layer1[y1][x1] = EMPTY
-                    layer1[y2][x2] = p
-                    layer1[y3][x3] = o
-                    onMoveComplete()
-                })
-            }
-            if (grab_dir[player] != move_dir[player]) new_grab_dir = move_dir[player]
-        }
-    }
-
-    if (grab_dir[player] > -2 && new_grab_dir != grab_dir[player])
-    {
-        grab_dir[player] = new_grab_dir
-        redraw()
-    }
-*/
-    if (inBounds(x2, y2) && layer0[y2][x2] != WALL)
-    {
-        if (layer1[y2][x2] == EMPTY)
-        {
-            // Just walk.
-            lock(x1,y1); lock(x2,y2)
-            addAnimation(250, function(context, dt) {
-                var x = S*(x1 + dt*(x2 - x1))
-                var y = S*(y1 + dt*(y2 - y1))
-                drawSpriteAt(context, parseInt(x), parseInt(y), p)
-            }, function() {
-                layer1[y1][x1] = EMPTY
-                layer1[y2][x2] = p
-                onMoveComplete(true)
-            })
-        }
-        else
-        if (layer1[y2][x2] > EMPTY && (!walking || explicit_move[player]))
-        {
-            if (grab_dir[player] == -2 && inBounds(x3, y3) && layer0[y3][x3] != WALL && layer1[y3][x3] == EMPTY)
-            {
-                // Push!
-                var o = layer1[y2][x2]
-                lock(x1,y1); lock(x2,y2); lock(x3,y3)
-                addAnimation(375, function(context, dt) {
-                    var x = S*(x1 + dt*(x2 - x1))
-                    var y = S*(y1 + dt*(y2 - y1))
-                    drawSpriteAt(context, parseInt(x), parseInt(y), p)
-                    var x = S*(x2 + dt*(x3 - x2))
-                    var y = S*(y2 + dt*(y3 - y2))
-                    drawSpriteAt(context, parseInt(x), parseInt(y), o)
-                }, function() {
-                    layer1[y1][x1] = EMPTY
-                    layer1[y2][x2] = p
-                    layer1[y3][x3] = o
-                    onMoveComplete(false)
-                })
-            }
-            if (grab_dir[player] == -1 && inBounds(x0, y0) && layer0[y0][x0] != WALL && layer1[y0][x0] == EMPTY)
-            {
-                // Pull!
-                var o = layer1[y2][x2]
-                lock(x0,y0); lock(x1,y1); lock(x2,y2)
-                addAnimation(375, function(context, dt) {
-                    var x = S*(x1 + dt*(x0 - x1))
-                    var y = S*(y1 + dt*(y0 - y1))
-                    drawSpriteAt(context, parseInt(x), parseInt(y), p)
-                    var x = S*(x2 + dt*(x1 - x2))
-                    var y = S*(y2 + dt*(y1 - y2))
-                    drawSpriteAt(context, parseInt(x), parseInt(y), o)
-                }, function() {
-                    layer1[y0][x0] = p
-                    layer1[y1][x1] = o
-                    layer1[y2][x2] = EMPTY
-                    onMoveComplete(false)
-                })
+                if (grab_dir[player] == -2 && inBounds(x3, y3) && layer0[y3][x3] != WALL && layer1[y3][x3] == EMPTY)
+                {
+                    // Push!
+                    var o = layer1[y2][x2]
+                    lock(x1,y1); lock(x2,y2); lock(x3,y3)
+                    addAnimation(375, function(context, dt) {
+                        var x = S*(x1 + dt*(x2 - x1))
+                        var y = S*(y1 + dt*(y2 - y1))
+                        drawSpriteAt(context, parseInt(x), parseInt(y), p)
+                        var x = S*(x2 + dt*(x3 - x2))
+                        var y = S*(y2 + dt*(y3 - y2))
+                        drawSpriteAt(context, parseInt(x), parseInt(y), o)
+                    }, function() {
+                        layer1[y1][x1] = EMPTY
+                        layer1[y2][x2] = p
+                        layer1[y3][x3] = o
+                        onMoveComplete(false)
+                    })
+                }
+                if (grab_dir[player] == -1 && inBounds(x0, y0) && layer0[y0][x0] != WALL && layer1[y0][x0] == EMPTY)
+                {
+                    // Pull!
+                    var o = layer1[y2][x2]
+                    lock(x0,y0); lock(x1,y1); lock(x2,y2)
+                    addAnimation(375, function(context, dt) {
+                        var x = S*(x1 + dt*(x0 - x1))
+                        var y = S*(y1 + dt*(y0 - y1))
+                        drawSpriteAt(context, parseInt(x), parseInt(y), p)
+                        var x = S*(x2 + dt*(x1 - x2))
+                        var y = S*(y2 + dt*(y1 - y2))
+                        drawSpriteAt(context, parseInt(x), parseInt(y), o)
+                    }, function() {
+                        layer1[y0][x0] = p
+                        layer1[y1][x1] = o
+                        layer1[y2][x2] = EMPTY
+                        onMoveComplete(false)
+                    })
+                }
             }
         }
     }
@@ -1000,4 +1007,7 @@ module.exports = {
     getEditMode:  getEditMode,
     setEditMode:  setEditMode,
     getLevelCode: getLevelCode,
-    setLevelCode: setLevelCode }
+    setLevelCode: setLevelCode,
+    getControlScheme: function() { return control_scheme },   // TEMP: for testing
+    setControlScheme: function(val) { control_scheme = val }  // TEMP: for testing
+}
