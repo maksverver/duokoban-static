@@ -332,13 +332,12 @@ function checkWinning()
     if (winning && have_goals)
     {
         if (winning_time < 0) winning_time = new Date().getTime()
-        document.getElementById('Winning').style.display = 'block'
     }
     else
     {
         winning_time = -1
-        document.getElementById('Winning').style.display = 'none'
     }
+    document.getElementById('Winning').style.display = (winning_time < 0 || getEditMode()) ? "none" : "block"
 }
 
 function movePlayer(player, new_dir, walking)
@@ -994,3 +993,11 @@ function render()
     }
     context.restore()
 }
+
+module.exports = {
+    initialize:   initialize,
+    invertGame:   invertGame,
+    getEditMode:  getEditMode,
+    setEditMode:  setEditMode,
+    getLevelCode: getLevelCode,
+    setLevelCode: setLevelCode }

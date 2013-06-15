@@ -1,0 +1,8 @@
+{ "name": "Duokoban",
+  "version": "0.0.1",
+  "author": "Maks Verver <maksverver@geocities.com>",
+  "dependencies": { "express": "3.2.x",
+                    "pg": "1.1.x",
+                    "socket.io": "0.9.x" },
+  "engines": { "node": "0.10.x",
+               "npm": "1.2.x" } }
