@@ -35,6 +35,14 @@ app.use('/rpc', function(request, response, next) {
 })
 
 var server = http.createServer(app)
-server.listen(port)
-duokoban.listen(server)
-console.log("Duokoban server listening on port " + port + ".")
+duokoban.listen(server, function(error) {
+    if (error)
+    {
+        console.log("Failed to start Duokoban server: " + error)
+    }
+    else
+    {
+        server.listen(port)
+        console.log("Duokoban server listening on port " + port + ".")
+    }
+})

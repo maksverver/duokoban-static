@@ -13,19 +13,19 @@ function propagateError(callback, onSuccess)
     }
 }
 
-exports.listen = function(server, store)
+exports.listen = function(server, callback)
 {
-    try
-    {
-        // First, try native client:
-        database = new pg.native.Client(process.env.DATABASE_URL)
-        database.connect()
-    }
-    catch (e)
-    {
-        // Fall back to JavaScript client:
-        database = new pg.Client(process.env.DATABASE_URL)
-        database.connect()
-        console.log("WARNING: using non-native Postgres client library")
-    }
+    database = new pg.native.Client(process.env.DATABASE_URL)
+    database.connect(function(error) {
+        if (error)
+        {
+            console.log("WARNING: falling back to non-native Postgres client library")
+            database = new pg.Client(process.env.DATABASE_URL)
+            database.connect(callback)
+        }
+        else
+        {
+            callback(null)
+        }
+    })
 }
