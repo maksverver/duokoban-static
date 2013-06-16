@@ -853,10 +853,10 @@ function drawSpriteAt(context, x, y, what, offset_dir)
         context.strokeRect(x + 0.05*S, y + 0.05*S, 0.9*S, 0.9*S)
         */
         context.beginPath()
-        context.arc(x + S/2, y + S/2, 0.4*S, 0, Math.PI*2)
+        context.arc(x + S/2, y + S/2, 0.5*S, 0, Math.PI*2)
         context.closePath()
         context.clip()
-        context.strokeStyle = getFillStyle(what - GOAL1 + PLAYER1, 0.75)
+        context.strokeStyle = getFillStyle(what - GOAL1 + PLAYER1, 0.5)
         drawStripes()
         break
 
