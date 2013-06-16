@@ -194,27 +194,32 @@ function stringToLayers(arg)
 
 function invertGame()
 {
-    var initial = decodeGameString(params.game)
-    for (var y = 0; y < H; ++y)
-    {
-        for (var x = 0; x < W; ++x)
+    queuePostAnimation(function() {
+
+        // Only invert in winning position.
+        if (!checkWinning()) return
+
+        var initial = decodeGameString(params.game)
+        for (var y = 0; y < H; ++y)
         {
-            if (layer0[y][x] == WALL) continue
-            switch (initial.layer1[y][x])
+            for (var x = 0; x < W; ++x)
             {
-            case BOX:     layer0[y][x] = GOAL; break
-            case PLAYER1: layer0[y][x] = GOAL1; break;
-            case PLAYER2: layer0[y][x] = GOAL2; break;
-            case EMPTY:   layer0[y][x] = OPEN; break
+                if (layer0[y][x] == WALL) continue
+                switch (initial.layer1[y][x])
+                {
+                case BOX:     layer0[y][x] = GOAL; break
+                case PLAYER1: layer0[y][x] = GOAL1; break;
+                case PLAYER2: layer0[y][x] = GOAL2; break;
+                case EMPTY:   layer0[y][x] = OPEN; break
+                }
             }
         }
-    }
-    for (var i = 0; i < 2; ++i)
-    {
-        grab_dir[i] = (initial.grab_dir[i] == -2) ? -1 : -2
-    }
-    setLevelCode(layersToString())
-    redraw()
+        for (var i = 0; i < 2; ++i)
+        {
+            grab_dir[i] = (initial.grab_dir[i] == -2) ? -1 : -2
+        }
+        setLevelCode(layersToString())
+    })
 }
 
 var frame_requested = false
@@ -341,6 +346,7 @@ function checkWinning()
         winning_time = -1
     }
     document.getElementById('Winning').style.display = (winning_time < 0 || getEditMode()) ? "none" : "block"
+    return winning_time >= 0
 }
 
 function movePlayer(player, new_dir, walking)
@@ -598,8 +604,8 @@ function formatHash(obj)
 
 function queuePostAnimation(f)
 {
-    post_animations.push(f)
-    redraw()
+    if (animations.length == 0) f()
+    else post_animations.push(f)
 }
 
 function updateStateFromHash()
