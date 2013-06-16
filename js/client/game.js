@@ -444,7 +444,7 @@ function movePlayer(player, new_dir, walking)
                         drawSpriteAt(context, parseInt(x), parseInt(y), o)
                         var x = S*(x1 + dt*(x2 - x1))
                         var y = S*(y1 + dt*(y2 - y1))
-                        drawSpriteAt(context, parseInt(x), parseInt(y), p)
+                        drawSpriteAt(context, parseInt(x), parseInt(y), p, grab_dir[player])
                     }, function() {
                         layer1[y0][x0] = EMPTY
                         layer1[y1][x1] = o
@@ -810,7 +810,7 @@ function getStrokeStyle(what, a)
     if (what == PLAYER2 - swap_controls) return 'rgba(0,0,160,' + a + ')'
 }
 
-function drawSpriteAt(context, x, y, what)
+function drawSpriteAt(context, x, y, what, offset_dir)
 {
     context.save()
     switch (what)
@@ -844,11 +844,11 @@ function drawSpriteAt(context, x, y, what)
     case PLAYER1:
     case PLAYER2:
         var player = what - PLAYER1
-        if (grab_dir[player] >= 0)
+        if (typeof(offset_dir) != 'undefined' && offset_dir >= 0)
         {
-            x += 0.2*S*DX[grab_dir[player]]
-            y += 0.2*S*DY[grab_dir[player]]
-        } 
+            x += 0.2*S*DX[offset_dir]
+            y += 0.2*S*DY[offset_dir]
+        }
         context.beginPath()
         context.arc(x + S/2, y + S/2, 0.4*S, 0, Math.PI*2)
         context.closePath()
@@ -942,7 +942,9 @@ function render()
         {
             if (layer1[y][x] > EMPTY)
             {
-                drawSpriteAt(context, S*x, S*y, layer1[y][x])
+                var what = layer1[y][x]
+                drawSpriteAt(context, S*x, S*y, layer1[y][x],
+                    what >= PLAYER1 && what <= PLAYER2 ? grab_dir[what - PLAYER1] : -1 )
             }
         }
     }
