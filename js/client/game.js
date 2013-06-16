@@ -285,38 +285,32 @@ function replaceOnGrid(grid, src, dest)
     }
 }
 
-function onCellClicked(x,y, dragged)
+function onCellClicked(x,y)
 {
-    if (!inBounds(x, y) || (dragged && selected_tool > 2)) return
+    if (!inBounds(x, y)) return
 
     var tool = tools[selected_tool]
 
     switch (tool)
     {
     case WALL:
-        if (layer0[y][x] != WALL && layer1[y][x] == EMPTY) { layer0[y][x] = WALL; break }
-        return
     case OPEN:
-        if (layer0[y][x] != OPEN) { layer0[y][x] = OPEN; break }
-        return
+        layer0[y][x] = tool; layer1[y][x] = EMPTY; break
     case GOAL:
-        if (layer0[y][x] == tool) { layer0[y][x] = OPEN; break }
-        if (layer0[y][x] != WALL) { layer0[y][x] = tool; break }
-        return
-    case BOX:
-        if (layer1[y][x] == BOX) { layer1[y][x] = EMPTY; break }
-        if (layer0[y][x] != WALL && layer1[y][x] == EMPTY) { layer1[y][x] = BOX; break }
-        return
     case GOAL1:
     case GOAL2:
-        if (layer0[y][x] == tool) { layer0[y][x] = OPEN; break }
-        if (layer0[y][x] == OPEN) { replaceOnGrid(layer0, tool, OPEN); layer0[y][x] = tool; break }
-        return
+        if (layer0[y][x] == tool) { layer0[y][x] = OPEN; break; }
+        if (tool != GOAL) replaceOnGrid(layer0, tool, OPEN);
+        layer0[y][x] = tool;
+        break;
+    case BOX:
     case PLAYER1:
     case PLAYER2:
-        if (layer1[y][x] == tool) { layer1[y][x] = EMPTY; break }
-        if (layer0[y][x] != WALL && layer1[y][x] == EMPTY) { replaceOnGrid(layer1, tool, EMPTY); layer1[y][x] = tool; break }
-        return
+        if (layer1[y][x] == tool) { layer1[y][x] = EMPTY; break; }
+        if (tool != BOX) replaceOnGrid(layer1, tool, EMPTY);
+        if (layer0[y][x] == WALL) layer0[y][x] = OPEN;
+        layer1[y][x] = tool;
+        break
     default:
         return
     }
@@ -713,12 +707,16 @@ function initialize(level_code)
         if (event.which == 1) leftButtonDown = false
     })
 
+    var click_x = -1, click_y = -1
+
     var canvas = document.getElementById("GameCanvas")
     canvas.addEventListener("mousedown", function(event) {
         event.preventDefault(event)
         fixEventOffset(event, canvas)
         queuePostAnimation(function() {
-            onCellClicked(parseInt(event.offsetX/S), parseInt(event.offsetY/S), false)
+            click_x = parseInt(event.offsetX/S)
+            click_y = parseInt(event.offsetY/S)
+            onCellClicked(click_x, click_y, false)
         })
     })
     canvas.addEventListener("mousemove", function(event) {
@@ -727,7 +725,15 @@ function initialize(level_code)
             event.preventDefault(event)
             fixEventOffset(event, canvas)
             queuePostAnimation(function() {
-                onCellClicked(parseInt(event.offsetX/S), parseInt(event.offsetY/S), true)
+                var x = parseInt(event.offsetX/S)
+                var y = parseInt(event.offsetY/S)
+                if (x != click_x || y != click_y)
+                {
+                    // Only process drag event if it visits a different cell
+                    click_x = x
+                    click_y = y
+                    onCellClicked(click_x, click_y, true)
+                }
             })
         }
     })
