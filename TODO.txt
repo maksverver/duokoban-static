@@ -1,7 +1,6 @@
- - chrome bug circle rendering
  - controls: should continue pushing if key is held down and player is temporarily blocked
  - add more default levels!
  - easier way to share levels?
  - maybe: internet multiplayer?
- - remove all the grab-related nonsense if the current controls suffice
+ - clean up control-related code at some point
  - allow submitting levels
