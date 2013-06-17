@@ -781,12 +781,11 @@ function initialize(level_code)
 
         case 82: restart(); break  // R
 
-        default: handled = false
+        default: return
         }
-        if (handled) event.preventDefault()
+        event.preventDefault()
     })
     document.addEventListener("keyup", function(event) {
-        var handled = true
         switch (event.keyCode)
         {
         case 37: movePlayer(0 + swap_controls, ~2); break  // <-
@@ -825,10 +824,10 @@ function drawSpriteAt(context, x, y, what, offset_dir)
     function drawStripes()
     {
         context.beginPath()
-        for (var i = -3; i <= 3; ++i)
+        for (var i = -4; i <= 4; ++i)
         {
-            context.moveTo(x + i*0.25*S, y + S)
-            context.lineTo(x + S + i*0.25*S, y)
+            context.moveTo(x + i*0.25*S - 0.1*S, y + S + 0.1*S)
+            context.lineTo(x + S + i*0.25*S + 0.1*S, y - 0.1*S)
         }
         context.lineWidth   = 0.1*S
         context.stroke()
@@ -843,7 +842,7 @@ function drawSpriteAt(context, x, y, what, offset_dir)
         context.strokeStyle = '#40ff40'
         context.strokeRect(x + 0.05*S, y + 0.05*S, 0.9*S, 0.9*S)
         */
-        context.rect(x - 1, y - 1, S + 2, S + 2)
+        context.rect(x, y, S, S)
         context.clip()
         context.strokeStyle = 'rgba(64,255,64,0.75)'
         drawStripes()
@@ -856,9 +855,13 @@ function drawSpriteAt(context, x, y, what, offset_dir)
         context.strokeStyle = getFillStyle(what - GOAL1 + PLAYER1)
         context.strokeRect(x + 0.05*S, y + 0.05*S, 0.9*S, 0.9*S)
         */
+        /*
         context.beginPath()
         context.arc(x + S/2, y + S/2, 0.5*S, 0, Math.PI*2)
         context.closePath()
+        context.clip()
+        */
+        context.rect(x, y, S, S)
         context.clip()
         context.strokeStyle = getFillStyle(what - GOAL1 + PLAYER1, 0.5)
         drawStripes()
