@@ -396,9 +396,9 @@ function movePlayer(player, new_dir, walking)
         redraw()
     }
 
-    function lock(x,y)
+    function lock(x,y, new_val)
     {
-        layer1[y][x] = LOCKED
+        layer1[y][x] = new_val
         var other = 1 - player
         var dir = grab_dir[other]
         if (dir >= 0)
@@ -431,7 +431,7 @@ function movePlayer(player, new_dir, walking)
                 {
                     // Pull!
                     var o = layer1[y0][x0]
-                    lock(x0,y0); lock(x1,y1); lock(x2,y2)
+                    lock(x0,y0,EMPTY); lock(x1,y1,LOCKED); lock(x2,y2,LOCKED)
                     addAnimation(375, function(context, dt) {
                         var x = S*(x0 + dt*(x1 - x0))
                         var y = S*(y0 + dt*(y1 - y0))
@@ -440,7 +440,6 @@ function movePlayer(player, new_dir, walking)
                         var y = S*(y1 + dt*(y2 - y1))
                         drawSpriteAt(context, parseInt(x), parseInt(y), p, grab_dir[player])
                     }, function() {
-                        layer1[y0][x0] = EMPTY
                         layer1[y1][x1] = o
                         layer1[y2][x2] = p
                         onMoveComplete(false)
@@ -450,13 +449,12 @@ function movePlayer(player, new_dir, walking)
                 else
                 {
                     // Just walk.
-                    lock(x1,y1); lock(x2,y2)
+                    lock(x1,y1,EMPTY); lock(x2,y2,LOCKED)
                     addAnimation(250, function(context, dt) {
                         var x = S*(x1 + dt*(x2 - x1))
                         var y = S*(y1 + dt*(y2 - y1))
                         drawSpriteAt(context, parseInt(x), parseInt(y), p)
                     }, function() {
-                        layer1[y1][x1] = EMPTY
                         layer1[y2][x2] = p
                         onMoveComplete(true)
                     })
@@ -469,7 +467,7 @@ function movePlayer(player, new_dir, walking)
                 {
                     // Push!
                     var o = layer1[y2][x2]
-                    lock(x1,y1); lock(x2,y2); lock(x3,y3)
+                    lock(x1,y1,EMPTY); lock(x2,y2,LOCKED); lock(x3,y3,LOCKED)
                     addAnimation(375, function(context, dt) {
                         var x = S*(x1 + dt*(x2 - x1))
                         var y = S*(y1 + dt*(y2 - y1))
@@ -478,7 +476,6 @@ function movePlayer(player, new_dir, walking)
                         var y = S*(y2 + dt*(y3 - y2))
                         drawSpriteAt(context, parseInt(x), parseInt(y), o)
                     }, function() {
-                        layer1[y1][x1] = EMPTY
                         layer1[y2][x2] = p
                         layer1[y3][x3] = o
                         onMoveComplete(false)
@@ -501,13 +498,12 @@ function movePlayer(player, new_dir, walking)
             if (layer1[y2][x2] == EMPTY)
             {
                 // Just walk.
-                lock(x1,y1); lock(x2,y2)
+                lock(x1,y1,EMPTY); lock(x2,y2,LOCKED)
                 addAnimation(250, function(context, dt) {
                     var x = S*(x1 + dt*(x2 - x1))
                     var y = S*(y1 + dt*(y2 - y1))
                     drawSpriteAt(context, parseInt(x), parseInt(y), p)
                 }, function() {
-                    layer1[y1][x1] = EMPTY
                     layer1[y2][x2] = p
                     onMoveComplete(true)
                 })
@@ -519,7 +515,7 @@ function movePlayer(player, new_dir, walking)
                 {
                     // Push!
                     var o = layer1[y2][x2]
-                    lock(x1,y1); lock(x2,y2); lock(x3,y3)
+                    lock(x1,y1,EMPTY); lock(x2,y2,LOCKED); lock(x3,y3,LOCKED)
                     addAnimation(375, function(context, dt) {
                         var x = S*(x1 + dt*(x2 - x1))
                         var y = S*(y1 + dt*(y2 - y1))
@@ -528,7 +524,6 @@ function movePlayer(player, new_dir, walking)
                         var y = S*(y2 + dt*(y3 - y2))
                         drawSpriteAt(context, parseInt(x), parseInt(y), o)
                     }, function() {
-                        layer1[y1][x1] = EMPTY
                         layer1[y2][x2] = p
                         layer1[y3][x3] = o
                         onMoveComplete(false)
@@ -538,7 +533,7 @@ function movePlayer(player, new_dir, walking)
                 {
                     // Pull!
                     var o = layer1[y2][x2]
-                    lock(x0,y0); lock(x1,y1); lock(x2,y2)
+                    lock(x0,y0,LOCKED); lock(x1,y1,LOCKED); lock(x2,y2,EMPTY)
                     addAnimation(375, function(context, dt) {
                         var x = S*(x1 + dt*(x0 - x1))
                         var y = S*(y1 + dt*(y0 - y1))
@@ -549,7 +544,6 @@ function movePlayer(player, new_dir, walking)
                     }, function() {
                         layer1[y0][x0] = p
                         layer1[y1][x1] = o
-                        layer1[y2][x2] = EMPTY
                         onMoveComplete(false)
                     })
                 }
