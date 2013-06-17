@@ -821,21 +821,15 @@ function getStrokeStyle(what, a)
 
 function drawSpriteAt(context, x, y, what, offset_dir)
 {
-    function drawStripes()
-    {
-        context.beginPath()
-        for (var i = -4; i <= 4; ++i)
-        {
-            context.moveTo(x + i*0.25*S - 0.1*S, y + S + 0.1*S)
-            context.lineTo(x + S + i*0.25*S + 0.1*S, y - 0.1*S)
-        }
-        context.lineWidth   = 0.1*S
-        context.stroke()
-    }
-
     context.save()
     switch (what)
     {
+    case OPEN:
+        context.strokeStyle = '#c0c0c0'
+        // if (layer1[y][x] == LOCKED) context.strokeStyle = 'red'
+        context.strokeRect(x, y, S, S)
+        break
+
     case GOAL:
         /*
         context.lineWidth   = S/10
@@ -844,27 +838,27 @@ function drawSpriteAt(context, x, y, what, offset_dir)
         */
         context.rect(x, y, S, S)
         context.clip()
+        context.beginPath()
+        for (var i = -4; i <= 4; ++i)
+        {
+            context.moveTo(x + i*0.25*S - 0.1*S, y + S + 0.1*S)
+            context.lineTo(x + S + i*0.25*S + 0.1*S, y - 0.1*S)
+        }
+        context.lineWidth   = 0.1*S
         context.strokeStyle = 'rgba(64,255,64,0.75)'
-        drawStripes()
+        context.stroke()
         break
 
     case GOAL1:
     case GOAL2:
-        /*
-        context.lineWidth   = S/10
-        context.strokeStyle = getFillStyle(what - GOAL1 + PLAYER1)
-        context.strokeRect(x + 0.05*S, y + 0.05*S, 0.9*S, 0.9*S)
-        */
-        /*
-        context.beginPath()
-        context.arc(x + S/2, y + S/2, 0.5*S, 0, Math.PI*2)
-        context.closePath()
-        context.clip()
-        */
-        context.rect(x, y, S, S)
-        context.clip()
         context.strokeStyle = getFillStyle(what - GOAL1 + PLAYER1, 0.5)
-        drawStripes()
+        context.lineWidth   = 0.1*S
+        for (var i = 1; i <= 3; ++i)
+        {
+            context.beginPath()
+            context.arc(x + S/2, y + S/2, 0.15*S*i, 0, Math.PI*2)
+            context.stroke()
+        }
         break
 
     case WALL:
@@ -959,18 +953,7 @@ function render()
     {
         for (var y = 0; y < H; ++y)
         {
-            if (layer0[y][x] == OPEN)
-            {
-                context.save()
-                context.strokeStyle = '#c0c0c0'
-                // if (layer1[y][x] == LOCKED) context.strokeStyle = 'red'
-                context.strokeRect(S*x, S*y, S, S)
-                context.restore()
-            }
-            else
-            {
-                drawSpriteAt(context, S*x, S*y, layer0[y][x])
-            }
+            drawSpriteAt(context, S*x, S*y, layer0[y][x])
         }
     }
 
