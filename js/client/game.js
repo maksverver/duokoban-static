@@ -188,8 +188,14 @@ function stringToLayers(arg)
     layer1 = obj.layer1
     grab_dir = obj.grab_dir
     var canvas = document.getElementById("GameCanvas")
-    canvas.width  = W*S
-    canvas.height = H*S
+    if (canvas.width != W*S || canvas.height != H*S)
+    {
+        // Only write to canvas width/height when the size has actually changed,
+        // because browsers will recreate the surface unconditionally when
+        // the width/height properties are written, causing ugly flickering.
+        canvas.width  = W*S
+        canvas.height = H*S
+    }
 }
 
 function invertGame()
