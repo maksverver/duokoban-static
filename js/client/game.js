@@ -420,7 +420,7 @@ function movePlayer(player, new_dir, walking)
 
     var new_grab_dir = -1
 
-    if (control_scheme == 1)
+    if ((control_scheme&1) == 1)
     {
         if (inBounds(x2, y2) && layer0[y2][x2] != WALL)
         {
@@ -463,7 +463,7 @@ function movePlayer(player, new_dir, walking)
                 }
             }
             else
-            if (layer1[y2][x2] > EMPTY && (!walking || explicit_move[player]))
+            if (layer1[y2][x2] > EMPTY && ((control_scheme&2) == 0 || !walking || explicit_move[player]))
             {
                 if (grab_dir[player] == -2 && inBounds(x3, y3) && layer0[y3][x3] != WALL && layer1[y3][x3] == EMPTY)
                 {
@@ -513,7 +513,7 @@ function movePlayer(player, new_dir, walking)
                 })
             }
             else
-            if (layer1[y2][x2] > EMPTY && (!walking || explicit_move[player]))
+            if (layer1[y2][x2] > EMPTY && ((control_scheme&2) == 0 || !walking || explicit_move[player]))
             {
                 if (grab_dir[player] == -2 && inBounds(x3, y3) && layer0[y3][x3] != WALL && layer1[y3][x3] == EMPTY)
                 {
