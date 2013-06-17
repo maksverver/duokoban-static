@@ -831,11 +831,6 @@ function drawSpriteAt(context, x, y, what, offset_dir)
         break
 
     case GOAL:
-        /*
-        context.lineWidth   = S/10
-        context.strokeStyle = '#40ff40'
-        context.strokeRect(x + 0.05*S, y + 0.05*S, 0.9*S, 0.9*S)
-        */
         context.rect(x, y, S, S)
         context.clip()
         context.beginPath()
@@ -897,7 +892,6 @@ function drawSpriteAt(context, x, y, what, offset_dir)
             context.moveTo(x, y + S)
             context.lineTo(x + S, y)
             context.lineWidth = 0.25*S
-            context.closePath()
             context.stroke()
         }
         break
@@ -933,21 +927,8 @@ function drawSpriteAt(context, x, y, what, offset_dir)
     context.restore()
 }
 
-function render()
+function render_game(context)
 {
-    frame_requested = false
-
-    if (animations.length == 0 && post_animations.length > 0)
-    {
-        // Process post-animation events
-        for (var i = 0; i < post_animations.length; ++i) post_animations[i]()
-        post_animations = []
-    }
-
-    var canvas = document.getElementById("GameCanvas")
-    var context = canvas.getContext("2d")
-    context.clearRect(0, 0, canvas.width, canvas.height)
-
     // Draw ground layer:
     for (var x = 0; x < W; ++x)
     {
@@ -998,11 +979,10 @@ function render()
         context.restore()
         if (dt < 1) redraw()
     }
+}
 
-    var canvas = document.getElementById("ToolCanvas")
-    var context = canvas.getContext("2d")
-    context.clearRect(0, 0, canvas.width, canvas.height)
-
+function render_tools(context)
+{
     for (var i = 0; i < tools.length; ++i)
     {
         var x = i%3, y = 2 - (i - x)/3
@@ -1019,7 +999,35 @@ function render()
         }
         drawSpriteAt(context, (0.1 + 1.1*x)*S, (0.1 + 1.1*y)*S, tools[i])
     }
+}
+
+function render()
+{
+    frame_requested = false
+
+    if (animations.length == 0 && post_animations.length > 0)
+    {
+        // Process post-animation events
+        for (var i = 0; i < post_animations.length; ++i) post_animations[i]()
+        post_animations = []
+    }
+
+    var canvas = document.getElementById("GameCanvas")
+    var context = canvas.getContext("2d")
+    context.save()
+    context.clearRect(0, 0, canvas.width, canvas.height)
+    render_game(context)
     context.restore()
+
+    if (getEditMode())
+    {
+        var canvas = document.getElementById("ToolCanvas")
+        var context = canvas.getContext("2d")
+        context.save()
+        context.clearRect(0, 0, canvas.width, canvas.height)
+        render_tools(context)
+        context.restore()
+    }
 }
 
 module.exports = {
