@@ -748,6 +748,10 @@ function initialize(level_code)
     })
 
     document.addEventListener("keydown", function(event) {
+
+        // Don't steal browser's keyboard shortcuts
+        if (event.altKey || event.ctrlKey) return
+
         var handled = true
 
         switch (event.keyCode)
