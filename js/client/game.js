@@ -343,20 +343,21 @@ function onCellClicked(x,y)
             else
             {
                 layer1[xy[1]][xy[0]] = EMPTY
-                layer0[y][x] = OPEN
+                if (layer0[y][x] == WALL) layer0[y][x] = OPEN
                 layer1[y][x] = tool
             }
             redraw(xy[0], xy[1])
         }
         else
         {
+            if (layer0[y][x] == WALL) layer0[y][x] = OPEN
             layer0[y][x] = OPEN
             layer1[y][x] = tool
         }
         break
     case BOX:
         if (layer1[y][x] == BOX)  { layer1[y][x] = EMPTY; break; }
-        layer0[y][x] = OPEN
+        if (layer0[y][x] == WALL) layer0[y][x] = OPEN
         layer1[y][x] = tool
         break
     default:
