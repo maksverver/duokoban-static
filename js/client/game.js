@@ -75,10 +75,11 @@ function reframe()
         }
     }
     if (x1 > x2  || y1 > y2) return
-    H = y2 - y1 + 3
-    W = x2 - x1 + 3
-    var new_layer0 = createGrid(WALL)
-    var new_layer1 = createGrid(EMPTY)
+
+    var new_height = y2 - y1 + 3
+    var new_width  = x2 - x1 + 3
+    var new_layer0 = createGrid(WALL, new_width, new_height)
+    var new_layer1 = createGrid(EMPTY, new_width, new_height)
     for (var x = x1; x <= x2; ++x)
     {
         for (var y = y1; y <= y2; ++y)
@@ -87,13 +88,12 @@ function reframe()
             new_layer1[y - y1 + 1][x - x1 + 1] = layer1[y][x]
         }
     }
-    layer0 = new_layer0
-    layer1 = new_layer1
-    updateHashFromState()
-    redraw()
+
+    setLevelCode(encodeGameString({ height: new_height, width: new_width,
+        layer0: new_layer0, layer1: new_layer1, roles: roles }))
 }
 
-function layersToString()
+function encodeGameString(obj)
 {
     var res = "", val = 0, bits = 0
     function append(i, n)
@@ -111,24 +111,30 @@ function layersToString()
     {
         append((1 << i) - 1, i + 1)
     }
-    append(H, 6)
-    append(W, 6)
-    append(4, 6)  // version 1
-    for (var y = 0; y < H; ++y)
+    append(obj.height, 6)
+    append(obj.width,  6)
+    append(4, 6)  // Version 2
+    for (var y = 0; y < obj.height; ++y)
     {
-        for (var x = 0; x < W; ++x)
+        for (var x = 0; x < obj.width; ++x)
         {
-            appendUnary(layer0[y][x])
-            if (layer0[y][x] != WALL)
+            appendUnary(obj.layer0[y][x])
+            if (obj.layer0[y][x] != WALL)
             {
-                var i = layer1[y][x]
+                var i = obj.layer1[y][x]
                 appendUnary(i < BOX ? 0 : i - BOX + 1)
-                if (i >= PLAYER1) append(roles[i - PLAYER1], 1)
+                if (i >= PLAYER1) append(obj.roles[i - PLAYER1], 1)
             }
         }
     }
     if (bits > 0) append(0, 6 - bits%6)
     return res.replace(/A*$/, "")
+}
+
+
+function layersToString()
+{
+    return encodeGameString({ height: H, width: W, layer0: layer0, layer1: layer1, roles: roles })
 }
 
 function decodeGameString(arg)
