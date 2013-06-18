@@ -142,10 +142,14 @@ function decodeGameString(arg)
     var pos = 0, val = 0, bits = 0 
     function get(n)
     {
-        while (bits < n)
+        while (bits < n && pos < arg.length)
         {
-            val |= base64digits.indexOf(arg.charAt(pos++)) << bits
-            bits += 6
+            var i = base64digits.indexOf(arg.charAt(pos++))
+            if (i >= 0)
+            {
+                val |= i << bits
+                bits += 6
+            }
         }
         var res = val&((1<<n) - 1)
         val >>>= n
