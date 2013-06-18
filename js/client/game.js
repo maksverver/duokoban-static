@@ -19,6 +19,10 @@ var BOX      =  5
 var PLAYER1  =  6
 var PLAYER2  =  7
 
+// Player roles:
+var PUSHER = 0
+var PULLER = 1
+
 // Other values which have associated sprites:
 var REFRAME  =  8
 
@@ -33,8 +37,9 @@ var H = 10          // grid height (in tiles)
 var layer0 = createGrid(WALL)
 var layer1 = createGrid(EMPTY)
 
+var roles           = [ PUSHER, PUSHER ]
 var move_dir        = [ -1, -1 ]
-var grab_dir        = [ -2, -1 ]   // -1: no grab.  -2: can't grab.
+var grab_dir        = [ -1, -1 ]
 var explicit_move   = [ false, false ]
 
 var selected_tool   = -1
@@ -112,7 +117,7 @@ function layersToString()
             {
                 var i = layer1[y][x]
                 appendUnary(i < BOX ? 0 : i - BOX + 1)
-                if (i >= PLAYER1) append((grab_dir[i - PLAYER1] > -2)|0, 1)
+                if (i >= PLAYER1) append(roles[i - PLAYER1], 1)
             }
         }
     }
@@ -145,12 +150,12 @@ function decodeGameString(arg)
     var W = get(6)
     var layer0 = createGrid(WALL, W, H)
     var layer1 = createGrid(EMPTY, W, H)
-    var grab_dir = [ -2, -2 ]
+    var roles = [ PUSHER, PUSHER ]
     var info = get(6)
     if (info < 4)
     {
         // Version 1 format:
-        grab_dir = [ -2 + (info & 1), -2 + ((info&2) >> 1) ]
+        roles = [ (info & 1), ((info&2) >> 1) ]
         for (var y = 0; y < H; ++y)
         {
             for (var x = 0; x < W; ++x)
@@ -172,11 +177,11 @@ function decodeGameString(arg)
                 var i = (layer0[y][x] == WALL) ? EMPTY : getUnary()
                 if (i > 0) i += BOX -1
                 layer1[y][x] = i
-                if (i >= PLAYER1) grab_dir[i - PLAYER1] = -2 + get(1)
+                if (i >= PLAYER1) roles[i - PLAYER1] = get(1)
             }
         }
     }
-    return { height: H, width: W, layer0: layer0, layer1: layer1, grab_dir: grab_dir }
+    return { height: H, width: W, layer0: layer0, layer1: layer1, roles: roles }
 }
 
 function stringToLayers(arg)
@@ -186,7 +191,8 @@ function stringToLayers(arg)
     H = obj.height
     layer0 = obj.layer0
     layer1 = obj.layer1
-    grab_dir = obj.grab_dir
+    roles = obj.roles
+    grab_dir = [ -1, -1 ]
     var canvas = document.getElementById("GameCanvas")
     if (canvas.width != W*S || canvas.height != H*S)
     {
@@ -222,7 +228,7 @@ function invertGame()
         }
         for (var i = 0; i < 2; ++i)
         {
-            grab_dir[i] = (initial.grab_dir[i] == -2) ? -1 : -2
+            roles[i] = 1 - initial.roles[i]
         }
         setLevelCode(layersToString())
     })
@@ -312,7 +318,11 @@ function onCellClicked(x,y)
     case BOX:
     case PLAYER1:
     case PLAYER2:
-        if (layer1[y][x] == tool) { layer1[y][x] = EMPTY; break; }
+        if (layer1[y][x] == tool)
+        {
+            if (++roles[tool - PLAYER1] > PULLER) layer1[y][x] = EMPTY;
+            break;
+        }
         if (tool != BOX) replaceOnGrid(layer1, tool, EMPTY);
         if (layer0[y][x] == WALL) layer0[y][x] = OPEN;
         layer1[y][x] = tool;
@@ -469,7 +479,7 @@ function movePlayer(player, new_dir, walking)
             else
             if (layer1[y2][x2] > EMPTY && ((control_scheme&2) == 0 || !walking || explicit_move[player]))
             {
-                if (grab_dir[player] == -2 && inBounds(x3, y3) && layer0[y3][x3] != WALL && layer1[y3][x3] == EMPTY)
+                if (roles[player] == PUSHER && inBounds(x3, y3) && layer0[y3][x3] != WALL && layer1[y3][x3] == EMPTY)
                 {
                     // Push!
                     var o = layer1[y2][x2]
@@ -491,7 +501,7 @@ function movePlayer(player, new_dir, walking)
             }
         }
 
-        if (grab_dir[player] > -2 && new_grab_dir != grab_dir[player])
+        if (roles[player] == PULLER && new_grab_dir != grab_dir[player])
         {
             grab_dir[player] = new_grab_dir
             redraw()
@@ -517,7 +527,7 @@ function movePlayer(player, new_dir, walking)
             else
             if (layer1[y2][x2] > EMPTY && ((control_scheme&2) == 0 || !walking || explicit_move[player]))
             {
-                if (grab_dir[player] == -2 && inBounds(x3, y3) && layer0[y3][x3] != WALL && layer1[y3][x3] == EMPTY)
+                if (roles[player] == PUSHER && inBounds(x3, y3) && layer0[y3][x3] != WALL && layer1[y3][x3] == EMPTY)
                 {
                     // Push!
                     var o = layer1[y2][x2]
@@ -535,7 +545,7 @@ function movePlayer(player, new_dir, walking)
                         onMoveComplete(false)
                     })
                 }
-                if (grab_dir[player] == -1 && inBounds(x0, y0) && layer0[y0][x0] != WALL && layer1[y0][x0] == EMPTY)
+                if (roles[player] == PULLER && inBounds(x0, y0) && layer0[y0][x0] != WALL && layer1[y0][x0] == EMPTY)
                 {
                     // Pull!
                     var o = layer1[y2][x2]
@@ -665,16 +675,6 @@ function selectTool(i)
 {
     if (i < -1 || i >= tools.length || !params.edit) return
 
-    if (tools[i] >= PLAYER1 && tools[i] <= PLAYER2)
-    {
-        if (i == selected_tool)
-        {
-            var player = tools[i] - PLAYER1
-            grab_dir[player] = -2 + (grab_dir[player] == -2)
-            updateHashFromState()
-        }
-        selected_tool = -1
-    }
     if (tools[i] == REFRAME)
     {
         reframe()
@@ -885,7 +885,7 @@ function drawSpriteAt(context, x, y, what, offset_dir)
         context.strokeStyle = getStrokeStyle(what)
         context.lineWidth = S/20
         context.stroke()
-        if (grab_dir[what - PLAYER1] > -2)
+        if (roles[what - PLAYER1] == PULLER)
         {
             context.clip()
             context.beginPath()
@@ -946,8 +946,9 @@ function render_game(context)
             if (layer1[y][x] > EMPTY)
             {
                 var what = layer1[y][x]
-                drawSpriteAt(context, S*x, S*y, layer1[y][x],
-                    what >= PLAYER1 && what <= PLAYER2 ? grab_dir[what - PLAYER1] : -1 )
+                var player = what - PLAYER1
+                drawSpriteAt( context, S*x, S*y, layer1[y][x],
+                    player >= 0 && player < 2 && roles[player] == PULLER ? grab_dir[player] : -1 )
             }
         }
     }

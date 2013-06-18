@@ -1,6 +1,16 @@
- - controls: should continue pushing if key is held down and player is temporarily blocked
- - add more default levels!
- - easier way to share levels?
+client:
+ - incremental rendering (for improved performance)
+ - clean up control-related code at some point!
+
+server:
+ - retrieve levels from database
+ - allow players to submit levels
+ - support storing trace of solution (and at some point, check it!)
+
+
  - maybe: internet multiplayer?
- - clean up control-related code at some point
- - allow submitting levels
+ 
+editor:
+ - make tools work more uniformly
+ - allow adding/removing arbitrary borders (instead of just reframing)
+ - allow selecting/moving parts of the level
