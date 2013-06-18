@@ -3,7 +3,7 @@
 <title>Duokoban</title>
 <link rel="stylesheet" type="text/css" href="style.css">
 </head>
-<body onload="game.initialize('KKEAAkpBQEIJRghqSCJpKGISSgIA6OB')">
+<body onload="game.initialize(document.getElementById('LevelSelect').value)">
 <div id="GameCanvasHolder"
     ><canvas width="400" height="440" id="GameCanvas"
         ><b>Error: this page uses an HTML5 Canvas which your browser doesn't support!</b></canvas
@@ -17,8 +17,9 @@
 <p><a href="javascript:game.setEditMode(!game.getEditMode())">Edit/play</a> -
    <a href="javascript:game.setLevelCode(prompt('Level code:', game.getLevelCode()))">Import/export</a> -
    Example games:
-   <select onChange="game.setLevelCode(value);blur()">
-     <option value="KKEAAkpBQEIJRghqSCJpKGISSgIA6OB" selected>Cross by Brend</option>
+   <select id="LevelSelect" onChange="game.setLevelCode(value);blur()">
+     <option value="KKEAASSAJJJIpYSIBSIBSIZoSQSSCINdD" selected>O noes! by Maks</option>
+     <option value="KKEAAkpBQEIJRghqSCJpKGISSgIA6OB">Cross by Brend</option>
      <option value="DFENzMUVRS6C">Introduction by Maks</option>
      <option value="DFEvJJsWLSydB">Introduction++ by Brend</option>
      <option value="GFEoMpaqhSXiJJZI">|+ (easy) by Maks</option>
