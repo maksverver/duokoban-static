@@ -23,6 +23,18 @@ app.use('/rpc', function(request, response, next) {
     {
         switch (request.body.method)
         {
+        case 'submitLevel':
+            duokoban.submitLevel(request.body.code, request.body.title, request.body.author, function(error, message) {
+                response.json({error: error || undefined, message:message})
+            })
+            break
+
+        case 'listLevels':
+            duokoban.listLevels(function(error, levels) {
+                response.json({error: error || undefined, levels: levels})
+            })
+            break
+
         default:
             response.send(403)
         }

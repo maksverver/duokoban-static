@@ -1,16 +1,15 @@
  - fade in "You've won!"  text (again)
+ - style frontpage
+ - favicon?
+ - allow players to vote on levels
 
 client:
  - clean up control-related code at some point!
 
 server:
- - retrieve levels from database
- - allow players to submit levels
  - support storing trace of solution (and at some point, check it!)
-
-
  - maybe: internet multiplayer?
- 
+
 editor:
  - make tools work more uniformly
  - allow adding/removing arbitrary borders (instead of just reframing)

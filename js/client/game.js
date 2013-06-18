@@ -1,5 +1,7 @@
 "use strict"
 
+var rpc = require("./rpc.js")
+
 var DX = [ +1,  0, -1,  0 ]
 var DY = [  0, +1,  0, -1 ]
 
@@ -33,6 +35,7 @@ var tools = [ WALL,  OPEN,    REFRAME,
               BOX,   PLAYER1, PLAYER2 ]
 
 var params = {}
+var edit_mode = false
 
 var S = 40          // bitmap tile size (in pixels)
 var W = 10          // grid width (in tiles)
@@ -392,7 +395,10 @@ function checkWinning()
     {
         winning_time = -1
     }
-    document.getElementById('Winning').style.display = (winning_time < 0 || getEditMode()) ? "none" : "block"
+    document.getElementById('InstructionsPlayMode').style.display = (winning_time >= 0 ||  getEditMode()) ? "none" : "block"
+    document.getElementById('InstructionsEditMode').style.display = (winning_time >= 0 || !getEditMode()) ? "none" : "block"
+    document.getElementById('WinningPlayMode').style.display = (winning_time < 0 ||  getEditMode()) ? "none" : "block"
+    document.getElementById('WinningEditMode').style.display = (winning_time < 0 || !getEditMode()) ? "none" : "block"
     return winning_time >= 0
 }
 
@@ -664,15 +670,6 @@ function updateStateFromHash()
     {
         stringToLayers(new_params.game || "KKE")
     }
-    if (new_params.edit)
-    {
-        document.getElementById("ToolCanvas").style.display = "inline-block"
-    }
-    else
-    {
-        document.getElementById("ToolCanvas").style.display = "none"
-        selected_tool = -1
-    }
     params = new_params
 }
 
@@ -700,17 +697,21 @@ function setLevelCode(arg)
 
 function getEditMode()
 {
-    return !!params.edit
+    return edit_mode
 }
 
 function setEditMode(arg)
 {
+    arg = !!arg
     queuePostAnimation(function() {
-        if (arg == getEditMode()) return
-        stringToLayers(getLevelCode())
-        if (arg) params.edit = 1
-        else delete params.edit
-        updateHashFromState()
+        if (arg != getEditMode())
+        {
+            edit_mode = arg
+            document.getElementById("ToolCanvas").style.display = edit_mode ? "inline-block" : "none" 
+            selected_tool = -1
+            stringToLayers(getLevelCode())
+            updateHashFromState()
+        }
     })
 }
 
@@ -723,7 +724,7 @@ function restart()
 
 function selectTool(i)
 {
-    if (i < -1 || i >= tools.length || !params.edit) return
+    if (i < -1 || i >= tools.length || !getEditMode()) return
 
     if (tools[i] == REFRAME)
     {
@@ -736,6 +737,34 @@ function selectTool(i)
 
 function initialize(level_code)
 {
+    rpc.rpc({ method: 'listLevels' }, function(result) {
+        if (result.error) alert(result.error)
+
+        // Initialize level selection box:
+        if (result.levels && result.levels.length > 0)
+        {
+            var select = document.getElementById("LevelSelect")
+            while (select.firstChild) select.removeChild(select.firstChild)
+            for (var i in result.levels)
+            {
+                var level = result.levels[i]
+                var option = document.createElement("option")
+                option.value = level.code
+                option.appendChild(document.createTextNode(
+                    (level.title || "Untitled") + " by " +
+                    (level.author || "Anonymous") ))
+                select.appendChild(option)
+
+            }
+            // Add blank template:
+            var option = document.createElement("option")
+            select.appendChild(option)
+            var option = document.createElement("option")
+            option.value="KKEAgkkkESSSSIJJJhkkkESSSSIJJJhkkkESSSS"
+            option.appendChild(document.createTextNode("Blank Template"))
+            select.appendChild(option)
+        }
+    })
     function fixEventOffset(event, element)
     {
         // This is retarded. JavaScript in the browser fucking sucks.
@@ -1139,6 +1168,28 @@ function redrawTools()
     tools_dirty = true
 }
 
+function onSubmitLevel()
+{
+    rpc.rpc({
+        method: 'submitLevel',
+        code:   getLevelCode(),
+        title:  document.getElementById('Title').value || "Untitled",
+        author: document.getElementById('Author').value || "Anonymous"
+    }, function(result) {
+        if (result.error)
+        {
+            alert(result.error)
+        }
+        else
+        {
+            document.getElementById('Title').value = ''
+            document.getElementById('Author').value = ''
+            if (result.message) alert(result.message)
+        }
+    })
+    return false  // suppress form submission
+}
+
 module.exports = {
     initialize:   initialize,
     invertGame:   invertGame,
@@ -1148,5 +1199,5 @@ module.exports = {
     setLevelCode: setLevelCode,
     getControlScheme: function() { return control_scheme },   // TEMP: for testing
     setControlScheme: function(val) { control_scheme = val }, // TEMP: for testing
-    redraw:       redraw  // for debugging
+    onSubmitLevel: onSubmitLevel
 }

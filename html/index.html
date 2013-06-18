@@ -4,41 +4,53 @@
 <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body onload="game.initialize(document.getElementById('LevelSelect').value)">
+<h1>Duokoban</h1>
+<p><a href="javascript:game.setEditMode(!game.getEditMode())">Edit/play</a> -
+   <a href="javascript:game.setLevelCode(prompt('Level code:', game.getLevelCode()))">Import/export</a> -
+   Levels:
+   <select id="LevelSelect" onChange="game.setLevelCode(value);blur()">
+     <option value="KKEAASSAJJJIpYSIBSIBSIZoSQSSCINdD" selected>O noes! by Maks</option>
+     <option value="KKEAAkpBQEIJRghqSCJpKGISSgIA6OB">Cross by Brend</option>
+     <option value="DFENzMUVRS6C">Introduction by Maks</option>
+     <option value=""></option>
+     <option value="KKEAgkkkESSSSIJJJhkkkESSSSIJJJhkkkESSSS">Blank Template</option>
+   </select>
+</p>
+
 <div id="GameCanvasHolder"
     ><canvas width="400" height="440" id="GameCanvas"
         ><b>Error: this page uses an HTML5 Canvas which your browser doesn't support!</b></canvas
     ><canvas width="136" height="136" id="ToolCanvas" style="display:none"></canvas
 ></div>
-<p>Put the green boxes inside the green squares. Plain guy pushes, striped guy pulls.<br>
-   Controls: Cursor keys for red player. W/A/S/D for blue player. Tab to swap control. R to restart.</p>
-<p id="Winning" style="display:none">
-   You won! <a href="javascript:game.invertGame()">Play in reverse</a>.
-</p>
-<p><a href="javascript:game.setEditMode(!game.getEditMode())">Edit/play</a> -
-   <a href="javascript:game.setLevelCode(prompt('Level code:', game.getLevelCode()))">Import/export</a> -
-   Example games:
-   <select id="LevelSelect" onChange="game.setLevelCode(value);blur()">
-     <option value="KKEAASSAJJJIpYSIBSIBSIZoSQSSCINdD" selected>O noes! by Maks</option>
-     <option value="KKEAAkpBQEIJRghqSCJpKGISSgIA6OB">Cross by Brend</option>
-     <option value="DFENzMUVRS6C">Introduction by Maks</option>
-     <option value="DFEvJJsWLSydB">Introduction++ by Brend</option>
-     <option value="GFEoMpaqhSXiJJZI">|+ (easy) by Maks</option>
-     <option value="GFEoMpaqhy7SMJJDB">|+ (hard) by Maks</option>
-     <option value="MJEAAkEmqq0NAJBIArqArJBYqaAr1CYmFwazC">Untitled 1 by Marius</option>
-     <option value="FGEASSIE6WTD">Untitled 2 by Marius</option>
-     <option value="FIEAQTluIhESGJ">Untitled 3 by Marius</option>
-     <option value="IHEAkkESb6GSlKERITmQEB">Untitled 4 by Marius</option>
-     <option value="PUEAAAAgkkAoqEeEEAV1NJJJJTyEUVCIEJBgkIEBAqEZykAAJFTCAkUpikBAiQkEASiQAJzgUJVSSSSOzAIIaIZGAJJB">Zero One Accept by Hiroyuki Imabayashi &amp; Marius</option>
-     <option value="IJCAAAAAAQkgAdAQFSIRBQFgARBQFgARBQESIRAAAQB">Move, Fool by Brend</option>
-     <option value="POEJJJJBEJJJJBRSSEBhEEBJJJJRQEIRQkkkEBkEBBJCBBISSkEJJJRUJSQIqKSkEJaquwMDAYOP">Tetris by Bouke Willem</option>
-     <option value="KKEAgqqqqqoqqqzTRVVVVVUVVVVFVqqqqoaSVVVUdTqqKqqqqqC">Untitled by Maks</option>
-     <option value="OTEAAAgGAEASiBpCAlkkkIJBdSSERSUAEEkEAJJJIABKiJZAJJJBCgECIJABJJRJgkMTIJJBAQ">Due Duo by Brend &amp; Micha</option>
-     <option value="HNEAAspmkVysCrkpykKDraStSqVYlaqsSNFTNJrkp6">S4T4N by Marius</option>
-     <option value="IIEAQSCqXzUF1M7OF1sZmiqm5qQSC">[zen] by Marius &amp; Brend</option>
-     <option value="WOEAAIhIiAJJpSSCRSiiKkkEJJJEgEBJJJJSCiICJIpSSiESICzMEJCzsGkkEzsGEJiZGICIESSSSqUhoESFBSqEJCdQEJJEpSiQIJpSFJBRENS">Fourteen Boxes by Marius &amp; Brend</option>
-     <option value="KKEAgkkkESSSSIJJJhkkkESSSSIJJJhkkkESSSS">Blank Template</option>
-   </select>
-</p>
+
+<div id="InstructionsPlayMode">
+  <h2>Objective</h2>
+  <p>Put the green boxes inside the green squares. Plain guy pushes, striped guy pulls.</p>
+  <h2>Controls</h2>
+  <p>Cursor keys for red player. W/A/S/D for blue player. P to swap controls. R to restart.</p>
+</div>
+<div id="InstructionsEditMode" style="display:none">
+  <h2>Edit Mode</h2>
+  <p>Use the toolbox on the right to modify the game grid on the left.
+     If you solve your level in edit mode, you may submit it to the level database.</p>
+  <p>Put the green boxes inside the green squares. Plain guy pushes, striped guy pulls.</p>
+  <h2>Controls</h2>
+  <p>Cursor keys for red player. W/A/S/D for blue player. P to swap controls. R to restart.</p>
+</div>
+<div id="WinningPlayMode" style="display:none">
+   <h2>You won!</h2> <a href="javascript:game.invertGame()">Play in reverse</a>. </div>
+<div id="WinningEditMode" style="display:none">
+  <h2>Level solved!</h2>
+  <p>Congratulations, you just solved the level you created!
+  If you think it is any good, please submit it to the database:</p>
+  <form onsubmit="return game.onSubmitLevel()">
+    <table style="margin:auto">
+      <tr><td>Level title:</td><td><input type="text" id="Title"></td></tr>
+      <tr><td>Author name:</td><td><input type="text" id="Author"></td></tr>
+      <tr><td></td><td><input type="submit" value="Submit level"></td></tr>
+    </table>
+  </form>
+</div>
 <script type="text/javascript" src="require.js"></script>
 <script type="text/javascript">
 game = require("js/client/game.js")
