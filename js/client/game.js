@@ -831,6 +831,7 @@ function drawSpriteAt(context, x, y, what, offset_dir)
         break
 
     case GOAL:
+        context.beginPath()
         context.rect(x, y, S, S)
         context.clip()
         context.beginPath()
@@ -852,6 +853,7 @@ function drawSpriteAt(context, x, y, what, offset_dir)
         {
             context.beginPath()
             context.arc(x + S/2, y + S/2, 0.15*S*i, 0, Math.PI*2)
+            context.closePath()
             context.stroke()
         }
         break
@@ -927,7 +929,7 @@ function drawSpriteAt(context, x, y, what, offset_dir)
     context.restore()
 }
 
-function render_game(context)
+function renderGame(context)
 {
     // Draw ground layer:
     for (var x = 0; x < W; ++x)
@@ -982,7 +984,7 @@ function render_game(context)
     }
 }
 
-function render_tools(context)
+function renderTools(context)
 {
     for (var i = 0; i < tools.length; ++i)
     {
@@ -1017,7 +1019,7 @@ function render()
     var context = canvas.getContext("2d")
     context.save()
     context.clearRect(0, 0, canvas.width, canvas.height)
-    render_game(context)
+    renderGame(context)
     context.restore()
 
     if (getEditMode())
@@ -1026,7 +1028,7 @@ function render()
         var context = canvas.getContext("2d")
         context.save()
         context.clearRect(0, 0, canvas.width, canvas.height)
-        render_tools(context)
+        renderTools(context)
         context.restore()
     }
 }
