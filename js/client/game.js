@@ -801,11 +801,15 @@ function initialize(level_code)
         // Don't steal browser's keyboard shortcuts
         if (event.altKey || event.ctrlKey) return
 
+        // Don't steal input from form elements:
+        if (document.activeElement && ( document.activeElement.tagName == "INPUT" ||
+                                        document.activeElement.tagName == "SELECT" )) return
+
         var handled = true
 
         switch (event.keyCode)
         {
-        case 9: swap_controls = !swap_controls; redraw(); break  // tab
+        case 80: swap_controls = !swap_controls; redraw(); break  // P
 
         case 48: case  96:  // 0
         case 49: case  97:  // 1
