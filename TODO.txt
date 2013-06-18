@@ -1,5 +1,6 @@
+ - fade in "You've won!"  text (again)
+
 client:
- - incremental rendering (for improved performance)
  - clean up control-related code at some point!
 
 server:

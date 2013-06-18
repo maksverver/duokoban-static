@@ -28,6 +28,10 @@ var REFRAME  =  8
 
 var base64digits = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 
+var tools = [ WALL,  OPEN,    REFRAME,
+              GOAL,  GOAL1,   GOAL2,
+              BOX,   PLAYER1, PLAYER2 ]
+
 var params = {}
 
 var S = 40          // bitmap tile size (in pixels)
@@ -48,9 +52,11 @@ var post_animations = []
 var winning_time    = -1
 var swap_controls   = 0
 
-var tools = [ WALL,  OPEN,    REFRAME,
-              GOAL,  GOAL1,   GOAL2,
-              BOX,   PLAYER1, PLAYER2 ]
+// Redrawing state:
+var frame_requested = false
+var dirty           = createGrid()   // redraw marked game cells only
+var game_dirty      = false          // redraw entire game canvas 
+var tools_dirty     = false          // redraw entire tool canvas
 
 function reframe()
 {
@@ -201,7 +207,10 @@ function stringToLayers(arg)
         // the width/height properties are written, causing ugly flickering.
         canvas.width  = W*S
         canvas.height = H*S
+        dirty = createGrid()
     }
+    checkWinning()
+    redraw()
 }
 
 function invertGame()
@@ -232,25 +241,6 @@ function invertGame()
         }
         setLevelCode(layersToString())
     })
-}
-
-var frame_requested = false
-
-function redraw()
-{
-    // Seriously, browser-makers, get your act together!
-    var requestAnimationFrame = window.requestAnimationFrame ||
-                                window.webkitRequestAnimationFrame ||
-                                window.mozRequestAnimationFrame ||
-                                window.msRequestAnimationFrame ||
-                                window.oRequestAnimationFrame ||
-                                function(f) { return setTimeout(f, 50) }
-
-    if (!frame_requested)
-    {
-        requestAnimationFrame(render)
-        frame_requested = true
-    }
 }
 
 function inBounds(x, y)
@@ -286,17 +276,6 @@ function findOnGrid(grid, val)
     }
 }
 
-function replaceOnGrid(grid, src, dest)
-{
-    for (var y = 0; y < H; ++y)
-    {
-        for (var x = 0; x < W; ++x)
-        {
-            if (grid[y][x] == src) grid[y][x] = dest
-        }
-    }
-}
-
 function onCellClicked(x,y)
 {
     if (!inBounds(x, y)) return
@@ -312,20 +291,43 @@ function onCellClicked(x,y)
     case GOAL1:
     case GOAL2:
         if (layer0[y][x] == tool) { layer0[y][x] = OPEN; break; }
-        if (tool != GOAL) replaceOnGrid(layer0, tool, OPEN);
+        if (tool != GOAL)
+        {
+            var xy = findOnGrid(layer0, tool);
+            if (xy)
+            {
+                layer0[xy[1]][xy[0]] = OPEN;
+                redraw(xy[0], xy[1])
+            }
+        }
         layer0[y][x] = tool;
         break;
     case PLAYER1:
     case PLAYER2:
-        if (layer1[y][x] == tool)
+        var xy = findOnGrid(layer1, tool);
+        if (xy)
         {
-            if (++roles[tool - PLAYER1] > PULLER) layer1[y][x] = EMPTY;
-            break;
+            if (xy[0] == x && xy[1] == y)
+            {
+                if ((roles[tool - PLAYER1] ^= 1) == 0)
+                {
+                    layer1[y][x] = EMPTY
+                }
+            }
+            else
+            {
+                layer1[xy[1]][xy[0]] = EMPTY
+                layer1[y][x] = tool
+            }
+            redraw(xy[0], xy[1])
         }
-        // falls through
+        else
+        {
+            layer1[y][x] = tool
+        }
+        break
     case BOX:
-        if (layer1[y][x] == tool) { layer1[y][x] = EMPTY; break; }
-        if (tool != BOX) replaceOnGrid(layer1, tool, EMPTY);
+        if (layer1[y][x] == BOX)  { layer1[y][x] = EMPTY; break; }
         if (layer0[y][x] == WALL) layer0[y][x] = OPEN;
         layer1[y][x] = tool;
         break
@@ -333,6 +335,7 @@ function onCellClicked(x,y)
         return
     }
     updateHashFromState()
+    redraw(x, y)
 }
 
 function checkWinning()
@@ -351,7 +354,10 @@ function checkWinning()
     }
     if (winning && have_goals)
     {
-        if (winning_time < 0) winning_time = new Date().getTime()
+        if (winning_time < 0)
+        {
+            winning_time = new Date().getTime()
+        }
     }
     else
     {
@@ -394,24 +400,24 @@ function movePlayer(player, new_dir, walking)
     var x1 = xy[0], x2 = x1 + dx, x3 = x2 + dx, x0 = x1 - dx
     var y1 = xy[1], y2 = y1 + dy, y3 = y2 + dy, y0 = y1 - dy
 
-    function addAnimation(delay, onRender, onComplete)
+    function addAnimation(delay, points, onRender, onComplete)
     {
         var start = new Date().getTime()
-        animations.push(function(context, time) {
+        function redrawPoints()
+        {
+            for (var i in points) redraw(points[i][0], points[i][1])
+        }
+        function animate(context, time)
+        {
             var dt = (time - start)/delay
-            if (dt >= 1)
-            {
-                onRender(context, 1)
-                onComplete()
-                return false
-            }
-            else
-            {
-                onRender(context, dt)
-                return true
-            }
-        })
-        redraw()
+            onRender(context, dt < 1 ? dt : 1)
+            redrawPoints()
+            if (dt < 1) return true
+            onComplete()
+            return false
+        }
+        animations.push(animate)
+        redrawPoints()
     }
 
     function lock(x,y, new_val)
@@ -423,7 +429,11 @@ function movePlayer(player, new_dir, walking)
         {
             var xx = x - DX[dir]
             var yy = y - DY[dir]
-            if (inBounds(xx, yy) && layer1[yy][xx] == PLAYER1 + other) grab_dir[other] = -1
+            if (inBounds(xx, yy) && layer1[yy][xx] == PLAYER1 + other)
+            {
+                grab_dir[other] = -1
+                redraw(xx,yy)
+            }
         }
     }
 
@@ -450,7 +460,7 @@ function movePlayer(player, new_dir, walking)
                     // Pull!
                     var o = layer1[y0][x0]
                     lock(x0,y0,EMPTY); lock(x1,y1,LOCKED); lock(x2,y2,LOCKED)
-                    addAnimation(375, function(context, dt) {
+                    addAnimation(375, [[x0,y0],[x1,y1],[x2,y2]], function(context, dt) {
                         var x = S*(x0 + dt*(x1 - x0))
                         var y = S*(y0 + dt*(y1 - y0))
                         drawSpriteAt(context, parseInt(x), parseInt(y), o)
@@ -468,7 +478,7 @@ function movePlayer(player, new_dir, walking)
                 {
                     // Just walk.
                     lock(x1,y1,EMPTY); lock(x2,y2,LOCKED)
-                    addAnimation(250, function(context, dt) {
+                    addAnimation(250, [[x1,y1],[x2,y2]], function(context, dt) {
                         var x = S*(x1 + dt*(x2 - x1))
                         var y = S*(y1 + dt*(y2 - y1))
                         drawSpriteAt(context, parseInt(x), parseInt(y), p)
@@ -486,7 +496,7 @@ function movePlayer(player, new_dir, walking)
                     // Push!
                     var o = layer1[y2][x2]
                     lock(x1,y1,EMPTY); lock(x2,y2,LOCKED); lock(x3,y3,LOCKED)
-                    addAnimation(375, function(context, dt) {
+                    addAnimation(375, [[x1,y1],[x2,y2],[x3,y3]], function(context, dt) {
                         var x = S*(x1 + dt*(x2 - x1))
                         var y = S*(y1 + dt*(y2 - y1))
                         drawSpriteAt(context, parseInt(x), parseInt(y), p)
@@ -505,8 +515,12 @@ function movePlayer(player, new_dir, walking)
 
         if (roles[player] == PULLER && new_grab_dir != grab_dir[player])
         {
+            if (grab_dir[player] >= 0)
+            {
+                redraw(x1 + DX[grab_dir[player]], y1 + DY[grab_dir[player]])
+            }
             grab_dir[player] = new_grab_dir
-            redraw()
+            redraw(x1, y1)
         }
     }
     else
@@ -517,7 +531,7 @@ function movePlayer(player, new_dir, walking)
             {
                 // Just walk.
                 lock(x1,y1,EMPTY); lock(x2,y2,LOCKED)
-                addAnimation(250, function(context, dt) {
+                addAnimation(250, [[x1,y1],[x2,y2]], function(context, dt) {
                     var x = S*(x1 + dt*(x2 - x1))
                     var y = S*(y1 + dt*(y2 - y1))
                     drawSpriteAt(context, parseInt(x), parseInt(y), p)
@@ -534,7 +548,7 @@ function movePlayer(player, new_dir, walking)
                     // Push!
                     var o = layer1[y2][x2]
                     lock(x1,y1,EMPTY); lock(x2,y2,LOCKED); lock(x3,y3,LOCKED)
-                    addAnimation(375, function(context, dt) {
+                    addAnimation(375, [[x1,y1],[x2,y2],[x3,y3]], function(context, dt) {
                         var x = S*(x1 + dt*(x2 - x1))
                         var y = S*(y1 + dt*(y2 - y1))
                         drawSpriteAt(context, parseInt(x), parseInt(y), p)
@@ -552,7 +566,7 @@ function movePlayer(player, new_dir, walking)
                     // Pull!
                     var o = layer1[y2][x2]
                     lock(x0,y0,LOCKED); lock(x1,y1,LOCKED); lock(x2,y2,EMPTY)
-                    addAnimation(375, function(context, dt) {
+                    addAnimation(375, [[x0,y0],[x1,y1],[x2,y2]], function(context, dt) {
                         var x = S*(x1 + dt*(x0 - x1))
                         var y = S*(y1 + dt*(y0 - y1))
                         drawSpriteAt(context, parseInt(x), parseInt(y), p)
@@ -616,9 +630,12 @@ function queuePostAnimation(f)
 
 function updateStateFromHash()
 {
-    params = parseHash(document.location.hash)
-    stringToLayers(params.game || "KK")
-    if (params.edit)
+    var new_params = parseHash(document.location.hash)
+    if (new_params.game != params.game)
+    {
+        stringToLayers(new_params.game || "KKE")
+    }
+    if (new_params.edit)
     {
         document.getElementById("ToolCanvas").style.display = "inline-block"
     }
@@ -627,8 +644,7 @@ function updateStateFromHash()
         document.getElementById("ToolCanvas").style.display = "none"
         selected_tool = -1
     }
-    checkWinning()
-    redraw()
+    params = new_params
 }
 
 function updateHashFromState()
@@ -660,17 +676,20 @@ function getEditMode()
 
 function setEditMode(arg)
 {
-    if (arg == getEditMode()) return
-    updateStateFromHash()
-    if (arg) params.edit = 1
-    else delete params.edit
-    updateHashFromState()
-    updateStateFromHash()
+    queuePostAnimation(function() {
+        if (arg == getEditMode()) return
+        stringToLayers(getLevelCode())
+        if (arg) params.edit = 1
+        else delete params.edit
+        updateHashFromState()
+    })
 }
 
 function restart()
 {
-    queuePostAnimation(updateStateFromHash)
+    queuePostAnimation(function() {
+        stringToLayers(getLevelCode())
+    } )
 }
 
 function selectTool(i)
@@ -680,11 +699,10 @@ function selectTool(i)
     if (tools[i] == REFRAME)
     {
         reframe()
-        redraw()
         return
     }
     selected_tool = (i == selected_tool) ? -1 : i
-    redraw()
+    redrawTools()
 }
 
 function initialize(level_code)
@@ -823,13 +841,19 @@ function getStrokeStyle(what, a)
 
 function drawSpriteAt(context, x, y, what, offset_dir)
 {
+    function drawCellOutline()
+    {
+        context.strokeStyle = '#d0d0d0'
+        context.lineWidth   = 1  // FIXME: should be dependent on S?
+        // if (layer1[y][x] == LOCKED) context.strokeStyle = 'red'
+        context.strokeRect(x + 0.5, y + 0.5, S - 0.5, S - 0.5)
+    }
+
     context.save()
     switch (what)
     {
     case OPEN:
-        context.strokeStyle = '#c0c0c0'
-        // if (layer1[y][x] == LOCKED) context.strokeStyle = 'red'
-        context.strokeRect(x, y, S, S)
+        drawCellOutline()
         break
 
     case GOAL:
@@ -849,7 +873,8 @@ function drawSpriteAt(context, x, y, what, offset_dir)
 
     case GOAL1:
     case GOAL2:
-        context.strokeStyle = getFillStyle(what - GOAL1 + PLAYER1, 0.5)
+        drawCellOutline()
+        context.strokeStyle = getFillStyle(what - GOAL1 + PLAYER1, "0.5")
         context.lineWidth   = 0.1*S
         for (var i = 1; i <= 3; ++i)
         {
@@ -933,29 +958,53 @@ function drawSpriteAt(context, x, y, what, offset_dir)
 
 function renderGame(context)
 {
-    // Draw ground layer:
-    for (var x = 0; x < W; ++x)
+    if (game_dirty)
+    {
+        console.log("Full redraw!")  // TEMP: for debugging
+        context.clearRect(0, 0, W*S, H*S)
+    }
+    else
     {
         for (var y = 0; y < H; ++y)
         {
-            drawSpriteAt(context, S*x, S*y, layer0[y][x])
+            for (var x = 0; x < W; ++x)
+            {
+                if (dirty[y][x])  context.clearRect(S*x, S*y, S, S)
+            }
+        }
+    }
+
+    // Draw ground layer:
+    for (var y = 0; y < H; ++y)
+    {
+        for (var x = 0; x < W; ++x)
+        {
+            if (game_dirty || dirty[y][x])
+            {
+                drawSpriteAt(context, S*x, S*y, layer0[y][x])
+            }
         }
     }
 
     // Draw object layer:
-    for (var x = 0; x < W; ++x)
+    for (var y = 0; y < H; ++y)
     {
-        for (var y = 0; y < H; ++y)
+        for (var x = 0; x < W; ++x)
         {
-            if (layer1[y][x] > EMPTY)
+            if (game_dirty || dirty[y][x])
             {
-                var what = layer1[y][x]
-                var player = what - PLAYER1
-                drawSpriteAt( context, S*x, S*y, layer1[y][x],
-                    player >= 0 && player < 2 && roles[player] == PULLER ? grab_dir[player] : -1 )
+                if (layer1[y][x] > EMPTY)
+                {
+                    var what = layer1[y][x]
+                    var player = what - PLAYER1
+                    drawSpriteAt( context, S*x, S*y, layer1[y][x],
+                        player >= 0 && player < 2 && roles[player] == PULLER ? grab_dir[player] : -1 )
+                }
+                dirty[y][x] = false
             }
         }
     }
+    game_dirty = false
 
     // Draw active animations:
     if (animations.length > 0)
@@ -966,23 +1015,6 @@ function renderGame(context)
             var anim = animations[i]
             if (!animations[i](context, time)) animations.splice(i--, 1)
         }
-        redraw()
-    }
-
-    if (winning_time >= 0)
-    {
-        var dt = (new Date().getTime() - winning_time)/2000
-        if (dt > 1) dt = 1
-        var msg = "You won!"
-        context.save()
-        context.font = "bold " + S + "px sans-serif";
-        context.strokeStyle = "rgba(255,255,255," + dt + ")";
-        context.lineWidth = 4*dt
-        context.strokeText(msg, 10, H*S - 10);
-        context.fillStyle = "rgba(255,0,255," + dt + ")";
-        context.fillText(msg, 10, H*S - 10);
-        context.restore()
-        if (dt < 1) redraw()
     }
 }
 
@@ -1020,7 +1052,6 @@ function render()
     var canvas = document.getElementById("GameCanvas")
     var context = canvas.getContext("2d")
     context.save()
-    context.clearRect(0, 0, canvas.width, canvas.height)
     renderGame(context)
     context.restore()
 
@@ -1035,6 +1066,43 @@ function render()
     }
 }
 
+
+// Seriously, browser-makers, get your act together!
+var requestAnimationFrame = window.requestAnimationFrame ||
+                            window.webkitRequestAnimationFrame ||
+                            window.mozRequestAnimationFrame ||
+                            window.msRequestAnimationFrame ||
+                            window.oRequestAnimationFrame ||
+                            function(f) { return setTimeout(f, 50) }
+
+function redraw(x, y)
+{
+    if (!frame_requested)
+    {
+        requestAnimationFrame(render)
+        frame_requested = true
+    }
+    if (typeof(x) != 'undefined')
+    {
+        dirty[y][x] = true
+    }
+    else
+    {
+        game_dirty  = true
+        tools_dirty = true
+    }
+}
+
+function redrawTools()
+{
+    if (!frame_requested)
+    {
+        requestAnimationFrame(render)
+        frame_requested = true
+    }
+    tools_dirty = true
+}
+
 module.exports = {
     initialize:   initialize,
     invertGame:   invertGame,
@@ -1043,5 +1111,6 @@ module.exports = {
     getLevelCode: getLevelCode,
     setLevelCode: setLevelCode,
     getControlScheme: function() { return control_scheme },   // TEMP: for testing
-    setControlScheme: function(val) { control_scheme = val }  // TEMP: for testing
+    setControlScheme: function(val) { control_scheme = val }, // TEMP: for testing
+    redraw:       redraw  // for debugging
 }
