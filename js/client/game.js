@@ -282,12 +282,28 @@ function findOnGrid(grid, val)
     }
 }
 
+function ungrabPlayers()
+{
+    for (var y = 0; y < H; ++y)
+    {
+        for (var x = 0; x < W; ++x)
+        {
+            var i = layer1[y][x] - PLAYER1
+            if (i >= 0 && i < 2 && grab_dir[i] >= 0)
+            {
+                redraw(x, y)
+                redraw(x + DX[grab_dir[i]], y + DY[grab_dir[i]])
+                grab_dir[i] = -1
+            }
+        }
+    }
+}
+
 function onCellClicked(x,y)
 {
     if (!inBounds(x, y)) return
-
+    ungrabPlayers()
     var tool = tools[selected_tool]
-
     switch (tool)
     {
     case WALL:
@@ -323,19 +339,21 @@ function onCellClicked(x,y)
             else
             {
                 layer1[xy[1]][xy[0]] = EMPTY
+                layer0[y][x] = OPEN
                 layer1[y][x] = tool
             }
             redraw(xy[0], xy[1])
         }
         else
         {
+            layer0[y][x] = OPEN
             layer1[y][x] = tool
         }
         break
     case BOX:
         if (layer1[y][x] == BOX)  { layer1[y][x] = EMPTY; break; }
-        if (layer0[y][x] == WALL) layer0[y][x] = OPEN;
-        layer1[y][x] = tool;
+        layer0[y][x] = OPEN
+        layer1[y][x] = tool
         break
     default:
         return
@@ -849,6 +867,9 @@ function drawSpriteAt(context, x, y, what, offset_dir)
 {
     function drawCellOutline()
     {
+        context.beginPath()
+        context.rect(x, y, S, S)
+        context.clip()
         context.strokeStyle = '#d0d0d0'
         context.lineWidth   = 1  // FIXME: should be dependent on S?
         // if (layer1[y][x] == LOCKED) context.strokeStyle = 'red'
