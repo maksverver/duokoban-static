@@ -315,7 +315,6 @@ function onCellClicked(x,y)
         if (tool != GOAL) replaceOnGrid(layer0, tool, OPEN);
         layer0[y][x] = tool;
         break;
-    case BOX:
     case PLAYER1:
     case PLAYER2:
         if (layer1[y][x] == tool)
@@ -323,6 +322,9 @@ function onCellClicked(x,y)
             if (++roles[tool - PLAYER1] > PULLER) layer1[y][x] = EMPTY;
             break;
         }
+        // falls through
+    case BOX:
+        if (layer1[y][x] == tool) { layer1[y][x] = EMPTY; break; }
         if (tool != BOX) replaceOnGrid(layer1, tool, EMPTY);
         if (layer0[y][x] == WALL) layer0[y][x] = OPEN;
         layer1[y][x] = tool;
