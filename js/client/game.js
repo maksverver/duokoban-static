@@ -354,7 +354,6 @@ function onCellClicked(x,y)
         else
         {
             if (layer0[y][x] == WALL) layer0[y][x] = OPEN
-            layer0[y][x] = OPEN
             layer1[y][x] = tool
         }
         break
