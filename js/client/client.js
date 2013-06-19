@@ -1,6 +1,7 @@
 "use strict"
 
 var GameState = require("./GameState.js")
+var editor = null  // loaded on demand
 var hash = require("./hash.js")
 var rpc = require("./rpc.js")
 
@@ -14,10 +15,6 @@ var PUSHER = 0, PULLER = 1
 
 var S = 40          // bitmap tile size (in pixels)
 
-var tools = [ WALL,  OPEN,    REFRAME,
-              GOAL,  GOAL1,   GOAL2,
-              BOX,   PLAYER1, PLAYER2 ]
-
 var gs         = GameState()
 var level_code = null
 var edit_mode  = false
@@ -26,7 +23,6 @@ var move_dir        = [ -1, -1 ]
 var grab_dir        = [ -1, -1 ]
 var explicit_move   = [ false, false ]
 
-var selected_tool   = -1
 var animations      = []
 var post_animations = []
 var winning_time    = -1
@@ -77,110 +73,6 @@ function invertGame()
     })
 }
 
-function reframe()
-{
-    gs.reframe()
-    setLevelCode(gs.encode())
-}
-
-function ungrabPlayers()
-{
-    for (var player = 0; player < 2; ++player)
-    {
-        if (grab_dir[player] < 0) continue
-        var xy = gs.search(1, PLAYER1 + player)
-        if (xy)
-        {
-            var x = xy[0], y = xy[1]
-            redraw(x, y)
-            redraw(x + DX[grab_dir[player]], y + DY[grab_dir[player]])
-            grab_dir[player] = -1
-        }
-    }
-}
-
-function onCellClicked(x,y)
-{
-    if (!gs.inBounds(x, y)) return
-    ungrabPlayers()
-    var tool = tools[selected_tool]
-
-    if (tool > WALL &&  gs.get(0, x, y) == WALL) gs.set(0, x, y, OPEN)
-
-    switch (tool)
-    {
-    case WALL:
-    case OPEN:
-        gs.set(0, x, y, tool)
-        gs.set(1, x, y, EMPTY)
-        break
-    case GOAL:
-    case GOAL1:
-    case GOAL2:
-        if (gs.get(0, x, y) == tool)
-        {
-            gs.set(0, x, y, OPEN)
-            break
-        }
-        if (tool != GOAL)
-        {
-            var xy = gs.search(0, tool);
-            if (xy)
-            {
-                gs.set(0, xy[0], xy[1], OPEN)
-                redraw(xy[0], xy[1])
-            }
-        }
-        gs.set(0, x, y, tool)
-        break;
-    case PLAYER1:
-    case PLAYER2:
-        var xy = gs.search(1, tool)
-        if (xy)
-        {
-            if (xy[0] == x && xy[1] == y)
-            {
-                switch (gs.getRole(tool - PLAYER1))
-                {
-                case PUSHER:
-                    gs.setRole(tool - PLAYER1, PULLER)
-                    break
-                default:
-                    gs.setRole(tool - PLAYER1, PUSHER)
-                    gs.set(1, x, y, EMPTY)
-                    break
-                }
-            }
-            else
-            {
-                gs.set(1, xy[0], xy[1], EMPTY)
-                if (gs.get(0, x, y) == WALL) gs.set(0, x, y, OPEN)
-                gs.set(1, x, y, tool)
-            }
-            redraw(xy[0], xy[1])
-        }
-        else
-        {
-            gs.set(1, x, y, tool)
-        }
-        break
-    case BOX:
-        if (gs.get(1, x, y) == BOX)
-        {
-            gs.set(1, x, y, EMPTY)
-        }
-        else
-        {
-            gs.set(1, x, y, tool)
-        }
-        break
-    default:
-        return
-    }
-    updateHashFromState()
-    redraw(x, y)
-}
-
 function checkWinning()
 {
     if (gs.isWinning())
@@ -194,10 +86,10 @@ function checkWinning()
     {
         winning_time = -1
     }
-    document.getElementById('InstructionsPlayMode').style.display = (winning_time >= 0 ||  getEditMode()) ? "none" : "block"
-    document.getElementById('InstructionsEditMode').style.display = (winning_time >= 0 || !getEditMode()) ? "none" : "block"
-    document.getElementById('WinningPlayMode').style.display = (winning_time < 0 ||  getEditMode()) ? "none" : "block"
-    document.getElementById('WinningEditMode').style.display = (winning_time < 0 || !getEditMode()) ? "none" : "block"
+    document.getElementById('InstructionsPlayMode').style.display = (winning_time >= 0 ||  edit_mode) ? "none" : "block"
+    document.getElementById('InstructionsEditMode').style.display = (winning_time >= 0 || !edit_mode) ? "none" : "block"
+    document.getElementById('WinningPlayMode').style.display = (winning_time < 0 ||  edit_mode) ? "none" : "block"
+    document.getElementById('WinningEditMode').style.display = (winning_time < 0 || !edit_mode) ? "none" : "block"
     return winning_time >= 0
 }
 
@@ -475,8 +367,9 @@ function setEditMode(arg)
         if (arg != getEditMode())
         {
             edit_mode = arg
+            if (!editor) editor = require("./editor.js")
             document.getElementById("ToolCanvas").style.display = edit_mode ? "inline-block" : "none" 
-            selected_tool = -1
+            editor.selectTool(-1)
             stringToLayers(getLevelCode())
             updateHashFromState()
         }
@@ -488,19 +381,6 @@ function restart()
     queuePostAnimation(function() {
         stringToLayers(getLevelCode())
     } )
-}
-
-function selectTool(i)
-{
-    if (i < -1 || i >= tools.length || !getEditMode()) return
-
-    if (tools[i] == REFRAME)
-    {
-        reframe()
-        return
-    }
-    selected_tool = (i == selected_tool) ? -1 : i
-    redrawTools()
 }
 
 function initialize()
@@ -555,14 +435,32 @@ function initialize()
 
     var click_x = -1, click_y = -1
 
+    function ungrabPlayers()
+    {
+        for (var player = 0; player < 2; ++player)
+        {
+            if (grab_dir[player] < 0) continue
+            var xy = gs.search(1, PLAYER1 + player)
+            if (xy)
+            {
+                var x = xy[0], y = xy[1]
+                client.redraw(x, y)
+                client.redraw(x + DX[grab_dir[player]], y + DY[grab_dir[player]])
+                grab_dir[player] = -1
+            }
+        }
+    }
+
     var canvas = document.getElementById("GameCanvas")
     canvas.addEventListener("mousedown", function(event) {
         event.preventDefault(event)
         fixEventOffset(event, canvas)
         queuePostAnimation(function() {
+            ungrabPlayers()
             click_x = parseInt(event.offsetX/S)
             click_y = parseInt(event.offsetY/S)
-            onCellClicked(click_x, click_y, false)
+            editor.onCellClicked(gs, click_x, click_y, false)
+            updateHashFromState()
         })
     })
     canvas.addEventListener("mousemove", function(event) {
@@ -576,9 +474,11 @@ function initialize()
                 if (x != click_x || y != click_y)
                 {
                     // Only process drag event if it visits a different cell
+                    ungrabPlayers()
                     click_x = x
                     click_y = y
-                    onCellClicked(click_x, click_y, true)
+                    editor.onCellClicked(gs, click_x, click_y, true)
+                    updateHashFromState()
                 }
             })
         }
@@ -590,7 +490,7 @@ function initialize()
         fixEventOffset(event, tool_canvas)
         var x = parseInt((event.offsetX/S - 0.05)/1.1)
         var y = parseInt((event.offsetY/S - 0.05)/1.1)
-        selectTool(3*(2 - y) + x)
+        editor.selectTool(3*(2 - y) + x)
     })
 
     document.addEventListener("keydown", function(event) {
@@ -617,7 +517,8 @@ function initialize()
         case 54: case 102:
         case 55: case 103:
         case 56: case 104:
-        case 57: case 105: selectTool((event.keyCode - 48)%48 - 1); break
+        case 57: case 105:
+            if (edit_mode) editor.selectTool((event.keyCode - 48)%48 - 1); break
 
         case 37: movePlayer(0 + swap_controls, 2); break  // <-
         case 38: movePlayer(0 + swap_controls, 3); break  //  ^
@@ -856,26 +757,6 @@ function renderGame(context)
     }
 }
 
-function renderTools(context)
-{
-    for (var i = 0; i < tools.length; ++i)
-    {
-        var x = i%3, y = 2 - (i - x)/3
-        if (i == selected_tool)
-        {
-            context.fillStyle = '#8000ff'
-            context.fillRect((1.1*x)*S, (1.1*y)*S, 1.2*S, 1.2*S)
-            context.clearRect((0.1 + 1.1*x)*S, (0.1 + 1.1*y)*S, S, S)
-        }
-        else
-        {
-            context.strokeStyle = '#c0c0c0'
-            context.strokeRect((0.1 + 1.1*x)*S, (0.1 + 1.1*y)*S, S, S)
-        }
-        drawSpriteAt(context, (0.1 + 1.1*x)*S, (0.1 + 1.1*y)*S, tools[i])
-    }
-}
-
 function render()
 {
     frame_requested = false
@@ -899,7 +780,7 @@ function render()
         var context = canvas.getContext("2d")
         context.save()
         context.clearRect(0, 0, canvas.width, canvas.height)
-        renderTools(context)
+        editor.renderTools(context)
         context.restore()
     }
 }
@@ -964,14 +845,16 @@ function onSubmitLevel()
 }
 
 module.exports = {
-    initialize:     initialize,
-    invertGame:     invertGame,
-    getEditMode:    getEditMode,
-    setEditMode:    setEditMode,
-    getLevelCode:   getLevelCode,
-    setLevelCode:   setLevelCode,
-    onSubmitLevel:  onSubmitLevel,
-    getControlScheme: function() { return control_scheme },   // TEMP: for testing
-    setControlScheme: function(val) { control_scheme = val }, // TEMP: for testing
-    getGameState:     function() { return gs }                // TEMP: for testing
-}
+    initialize:         initialize,
+    invertGame:         invertGame,
+    getEditMode:        getEditMode,
+    setEditMode:        setEditMode,
+    getLevelCode:       getLevelCode,
+    setLevelCode:       setLevelCode,
+    onSubmitLevel:      onSubmitLevel,
+    getControlScheme:   function() { return control_scheme },   // TEMP: for testing
+    setControlScheme:   function(val) { control_scheme = val }, // TEMP: for testing
+    getGameState:       function() { return gs },               // TEMP: for testing
+    drawSpriteAt:       drawSpriteAt,       // used by editor
+    redraw:             redraw,             // used by editor
+    redrawTools:        redrawTools }       // used by editor
