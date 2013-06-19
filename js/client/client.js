@@ -459,7 +459,7 @@ function initialize()
             ungrabPlayers()
             click_x = parseInt(event.offsetX/S)
             click_y = parseInt(event.offsetY/S)
-            editor.onCellClicked(gs, click_x, click_y, false)
+            if (edit_mode) editor.onCellClicked(gs, click_x, click_y, false)
             updateHashFromState()
         })
     })
@@ -477,7 +477,7 @@ function initialize()
                     ungrabPlayers()
                     click_x = x
                     click_y = y
-                    editor.onCellClicked(gs, click_x, click_y, true)
+                    if (edit_mode) editor.onCellClicked(gs, click_x, click_y, true)
                     updateHashFromState()
                 }
             })
