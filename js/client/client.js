@@ -503,7 +503,7 @@ function selectTool(i)
     redrawTools()
 }
 
-function initialize(level_code)
+function initialize()
 {
     rpc.rpc({ method: 'listLevels' }, function(result) {
         if (result.error) alert(result.error)
@@ -522,7 +522,7 @@ function initialize(level_code)
                     (level.title || "Untitled") + " by " +
                     (level.author || "Anonymous") ))
                 select.appendChild(option)
-
+                if (level.code == level_code) option.selected = true
             }
             // Add blank template:
             var option = document.createElement("option")
@@ -651,7 +651,7 @@ function initialize(level_code)
     })
 
     if (document.location.hash) updateStateFromHash()
-    else setLevelCode(level_code)
+    else setLevelCode(document.getElementById('LevelSelect').value)
     window.onhashchange = function() { queuePostAnimation(updateStateFromHash) }
 }
 
