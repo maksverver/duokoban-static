@@ -48,14 +48,14 @@ function stringToLayers(arg)
         // the width/height properties are written, causing ugly flickering.
         canvas.width  = width*S
         canvas.height = height*S
-        dirty = []
-        for (var y = 0; y < height; ++y)
+    }
+    dirty = []
+    for (var y = 0; y < height; ++y)
+    {
+        dirty[y] = []
+        for (var x = 0; x < width; ++x)
         {
-            dirty[y] = []
-            for (var x = 0; x < width; ++x)
-            {
-                dirty[y][x] = false
-            }
+            dirty[y][x] = false
         }
     }
     checkWinning()
