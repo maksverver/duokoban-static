@@ -3,12 +3,12 @@
 <title>Duokoban</title>
 <link rel="stylesheet" type="text/css" href="style.css">
 </head>
-<body onload="game.initialize(document.getElementById('LevelSelect').value)">
+<body onload="client.initialize(document.getElementById('LevelSelect').value)">
 <h1>Duokoban</h1>
-<p><a href="javascript:game.setEditMode(!game.getEditMode())">Edit/play</a> -
-   <a href="javascript:game.setLevelCode(prompt('Level code:', game.getLevelCode()))">Import/export</a> -
+<p><a href="javascript:client.setEditMode(!client.getEditMode())">Edit/play</a> -
+   <a href="javascript:client.setLevelCode(prompt('Level code:', client.getLevelCode()))">Import/export</a> -
    Levels:
-   <select id="LevelSelect" onChange="game.setLevelCode(value);blur()">
+   <select id="LevelSelect" onChange="client.setLevelCode(value);blur()">
      <option value="KKEAASSAJJJIpYSIBSIBSIZoSQSSCINdD" selected>O noes! by Maks</option>
      <option value="KKEAAkpBQEIJRghqSCJpKGISSgIA6OB">Cross by Brend</option>
      <option value="DFENzMUVRS6C">Introduction by Maks</option>
@@ -33,12 +33,12 @@
      If you solve your level in edit mode, you may submit it to the level database.</p>
 </div>
 <div id="WinningPlayMode" style="display:none">
-   <h2>You won!</h2> <a href="javascript:game.invertGame()">Play in reverse</a>. </div>
+   <h2>You won!</h2> <a href="javascript:client.invertGame()">Play in reverse</a>. </div>
 <div id="WinningEditMode" style="display:none">
   <h2>Level solved!</h2>
   <p>Congratulations, you just solved the level you created!
   If you think it is any good, please submit it to the database:</p>
-  <form onsubmit="return game.onSubmitLevel()">
+  <form onsubmit="return client.onSubmitLevel()">
     <table style="margin:auto">
       <tr><td>Level title:</td><td><input type="text" id="Title"></td></tr>
       <tr><td>Author name:</td><td><input type="text" id="Author"></td></tr>
@@ -51,7 +51,7 @@
 
 <script type="text/javascript" src="require.js"></script>
 <script type="text/javascript">
-game = require("js/client/game.js")
+client = require("js/client/client.js")
 </script>
 </body>
 </html>
