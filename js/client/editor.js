@@ -60,7 +60,7 @@ function onCellClicked(gs, x, y, dragged)
     if (tool > OPEN)
     {
         if (!dragged) negative = (gs.get(tool >= BOX ? 1 : 0, x, y) == tool);
-        if (!negative) gs.set(0, x, y, OPEN)
+        if (!negative && gs.get(0, x, y) == WALL) gs.set(0, x, y, OPEN)
     }
 
     switch (tool)
