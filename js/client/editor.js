@@ -57,7 +57,11 @@ function onCellClicked(gs, x, y, dragged)
         return
     }
 
-    if (tool > WALL && !negative && gs.get(0, x, y) == WALL) gs.set(0, x, y, OPEN)
+    if (tool > OPEN)
+    {
+        if (!dragged) negative = (gs.get(tool >= BOX ? 1 : 0, x, y) == tool);
+        if (!negative) gs.set(0, x, y, OPEN)
+    }
 
     switch (tool)
     {
@@ -70,9 +74,6 @@ function onCellClicked(gs, x, y, dragged)
     case GOAL:
     case GOAL1:
     case GOAL2:
-
-        if (!dragged) negative = (gs.get(0, x, y) == tool)
-
         if (negative)
         {
             if (gs.get(0, x, y) == tool) gs.set(0, x, y, OPEN)
@@ -92,13 +93,22 @@ function onCellClicked(gs, x, y, dragged)
         }
         break;
 
+    case BOX:
+        if (negative)
+        {
+            if (gs.get(1, x, y) == BOX) gs.set(1, x, y, EMPTY)
+        }
+        else
+        {
+            gs.set(1, x, y, BOX)
+        }
+        break
+
     case PLAYER1:
     case PLAYER2:
-
-        if (!dragged)
+        if (negative)
         {
-            negative = (gs.get(1, x, y) == tool)
-            if (negative)
+            if (!dragged)
             {
                 switch (gs.getRole(tool - PLAYER1))
                 {
@@ -112,8 +122,7 @@ function onCellClicked(gs, x, y, dragged)
                 }
             }
         }
-
-        if (!negative)
+        else
         {
             var xy = gs.search(1, tool)
             if (xy)
@@ -121,20 +130,6 @@ function onCellClicked(gs, x, y, dragged)
                 gs.set(1, xy[0], xy[1], EMPTY)
                 client.redraw(xy[0], xy[1])
             }
-            gs.set(1, x, y, tool)
-        }
-        break
-
-    case BOX:
-
-        if (!dragged) negative = (gs.get(1, x, y) == BOX) 
-
-        if (negative)
-        {
-            if (gs.get(1, x, y) == BOX) gs.set(1, x, y, EMPTY)
-        }
-        else
-        {
             gs.set(1, x, y, tool)
         }
         break
