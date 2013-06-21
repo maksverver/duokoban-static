@@ -38,6 +38,7 @@ var tools_dirty     = false          // redraw entire tool canvas
 function stringToLayers(arg)
 {
     gs.decode(arg)
+    for (var i = 0; i < 2; ++i) grab_dir[i] = -1
     var width  = gs.getWidth()
     var height = gs.getHeight()
     var canvas = document.getElementById("GameCanvas")
