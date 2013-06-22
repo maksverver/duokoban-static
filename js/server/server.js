@@ -58,6 +58,48 @@ function submitLevel(code, title, author, callback)
     })
 }
 
+function voteLevel(code, property, vote, callback)
+{
+    if (isNaN(vote) || vote < 1 || vote > 5)
+    {
+        callback("Invalid vote!")
+        return
+    }
+    if (property != "difficulty" && property != "fun")
+    {
+        callback("Invalid property!")
+        return
+    }
+    database.query('SELECT level_id,title FROM levels WHERE code=$1', [code], function(error, result) {
+        if (error)
+        {
+            console.log(error)
+            callback("Database error on SELECT!")
+            return
+        }
+        if (result.rows.length < 1)
+        {
+            callback("Level not found!")
+            return
+        }
+        var level_id = result.rows[0].level_id
+        database.query('INSERT INTO votes (level_id, property, value) VALUES ($1, $2, $3)', [level_id, property, 2.5], function() {
+            // if the above query failed, it is probably because the row already existed, so try to update anyway:
+            database.query('UPDATE votes SET (value,sum,count) = (1.0*(sum+$3)/(count+1), sum+$3, count+1) WHERE level_id=$1 AND property=$2',
+                           [level_id, property, vote], function(error) {
+                if (error)
+                {
+                    console.log(error)
+                    callback("Database error on UPDATE!")
+                    return
+                }
+                console.log("Storing vote " + vote + " on " + property + " for level " + level_id + " (" + result.rows[0].title + ")")
+                callback(null, "Thanks for your vote!")
+            })
+        })
+    })
+}
+
 function listLevels(callback)
 {
     database.query( 'SELECT code,title,author FROM levels ORDER BY created_at ASC', function(error, result) {
@@ -74,4 +116,5 @@ function listLevels(callback)
 module.exports = {
     listen:         listen,
     submitLevel:    submitLevel,
+    voteLevel:      voteLevel,
     listLevels:     listLevels }

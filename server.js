@@ -29,6 +29,12 @@ app.use('/rpc', function(request, response, next) {
             })
             break
 
+        case 'voteLevel':
+            duokoban.voteLevel(request.body.code, request.body.property, parseInt(request.body.vote), function(error, message) {
+                response.json({error: error || undefined, message:message})
+            })
+            break
+
         case 'listLevels':
             duokoban.listLevels(function(error, levels) {
                 response.json({error: error || undefined, levels: levels})

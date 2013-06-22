@@ -1,7 +1,10 @@
  - fade in "You've won!"  text (again)
  - style frontpage
  - favicon?
- - allow players to vote on levels
+
+voting:
+ - widget could look a little nicer (mouse-over?)
+ - maybe track votes in a cookie/local storage?
 
 client:
  - clean up control-related code at some point!

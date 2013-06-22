@@ -22,3 +22,20 @@ p {
     background: #e0e0ff;
     border: 1px solid #a0a0a0;
 }
+
+div.star {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    background-image: url('img/star.png');
+    background-repeat: none;
+    background-position: 0 0; 
+}
+
+div.star.closed {
+    background-position: 32px 0; 
+}
+
+.clickable {
+    cursor: pointer
+}

@@ -4,12 +4,12 @@
 <title>Duokoban</title>
 <link rel="stylesheet" type="text/css" href="style.css">
 </head>
-<body onload="client.initialize()">
+<body onload="client.initialize(); voting.updateWidget(client.getLevelCode())">
 <h1>Duokoban</h1>
 <p><a href="javascript:client.setEditMode(!client.getEditMode())">Edit/play</a> -
-   <a href="javascript:client.setLevelCode(prompt('Level code:', client.getLevelCode()))">Import/export</a> -
+   <a href="javascript:changeLevel(prompt('Level code:', client.getLevelCode()))">Import/export</a> -
    Levels:
-   <select id="LevelSelect" onChange="client.setLevelCode(value);blur()">
+   <select id="LevelSelect" onChange="changeLevel(value);blur()">
      <option value="KKEAASSAJJJIpYSIBSIBSIZoSQSSCINdD" selected>O noes! by Maks</option>
      <option value="KKEAAkpBQEIJRghqSCJpKGISSgIA6OB">Cross by Brend</option>
      <option value="DFENzMUVRS6C">Introduction by Maks</option>
@@ -34,7 +34,29 @@
      If you solve your level in edit mode, you may submit it to the level database.</p>
 </div>
 <div id="WinningPlayMode" style="display:none">
-   <h2>You won!</h2> <a href="javascript:client.invertGame()">Play in reverse</a>. </div>
+   <h2>You won!</h2>
+   <p><a href="javascript:client.invertGame()">Play in reverse</a>.</p>
+
+   <h3>Rate this level</h3>   
+    <div id="VoteWidget">
+    <table style="margin:auto">
+    <tr><th style="text-align:right">Fun:&nbsp;</th>
+        <td><div id="fun1" class="star open clickable" onclick="voting.vote('fun',1)"></div>
+            <div id="fun2" class="star open clickable" onclick="voting.vote('fun',2)"></div>
+            <div id="fun3" class="star open clickable" onclick="voting.vote('fun',3)"></div>
+            <div id="fun4" class="star open clickable" onclick="voting.vote('fun',4)"></div>
+            <div id="fun5" class="star open clickable" onclick="voting.vote('fun',5)"></div></td>
+    </tr>
+    <tr><th style="text-align:right">Difficulty:&nbsp;</th>
+        <td><div id="difficulty1" class="star open clickable" onclick="voting.vote('difficulty',1)"></div>
+            <div id="difficulty2" class="star open clickable" onclick="voting.vote('difficulty',2)"></div>
+            <div id="difficulty3" class="star open clickable" onclick="voting.vote('difficulty',3)"></div>
+            <div id="difficulty4" class="star open clickable" onclick="voting.vote('difficulty',4)"></div>
+            <div id="difficulty5" class="star open clickable" onclick="voting.vote('difficulty',5)"></div></td>
+    </tr>
+    </table>
+    </div>
+</div>
 <div id="WinningEditMode" style="display:none">
   <h2>Level solved!</h2>
   <p>Congratulations, you just solved the level you created!
@@ -53,6 +75,16 @@
 <script type="text/javascript" src="require.js"></script>
 <script type="text/javascript">
 client = require("js/client/client.js")
+voting = require("js/client/voting.js")
+
+function changeLevel(code)
+{
+    if (code)
+    {
+        client.setLevelCode(code)
+        voting.updateWidget(code)
+    }
+}
 </script>
 </body>
 </html>
