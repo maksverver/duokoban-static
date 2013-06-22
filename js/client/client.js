@@ -250,8 +250,12 @@ function movePlayer(player, new_dir, walking)
             if (grab_dir[player] >= 0)
             {
                 redraw(x1 + DX[grab_dir[player]], y1 + DY[grab_dir[player]])
+                grab_dir[player] = -1
             }
-            grab_dir[player] = new_grab_dir
+            else
+            {
+                grab_dir[player] = new_grab_dir
+            }
             redraw(x1, y1)
         }
     }
