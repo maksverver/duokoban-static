@@ -571,7 +571,7 @@ function getFillStyle(what, a)
 function getStrokeStyle(what, a)
 {
     if (!a) a = 1
-    if (what == PLAYER1 + swap_controls) return 'rgba(160,0,0,' + a + ')'
+    if (what == PLAYER1 + swap_controls) return 'rgba(128,0,0,' + a + ')'
     if (what == PLAYER2 - swap_controls) return 'rgba(0,0,160,' + a + ')'
 }
 
