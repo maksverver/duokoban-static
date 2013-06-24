@@ -445,36 +445,37 @@ function initialize()
         }
     }
 
+    function onCellClicked(x, y, dragged)
+    {
+        // Only process drag event if it visits a different cell
+        if (dragged && click_x == x && click_y == y) return
+        click_x = x
+        click_y = y
+        if (edit_mode)
+        {
+            ungrabPlayers()
+            editor.onCellClicked(gs, x, y, dragged)
+            updateHashFromState()
+            checkWinning()
+        }
+    }
+
     var canvas = document.getElementById("GameCanvas")
     canvas.addEventListener("mousedown", function(event) {
         event.preventDefault(event)
         fixEventOffset(event, canvas)
-        queuePostAnimation(function() {
-            ungrabPlayers()
-            click_x = parseInt(event.offsetX/S)
-            click_y = parseInt(event.offsetY/S)
-            if (edit_mode) editor.onCellClicked(gs, click_x, click_y, false)
-            updateHashFromState()
-        })
+        var x = parseInt(event.offsetX/S),
+            y = parseInt(event.offsetY/S)
+        queuePostAnimation(function() { onCellClicked(x, y, false) })
     })
     canvas.addEventListener("mousemove", function(event) {
         if (leftButtonDown)
         {
             event.preventDefault(event)
             fixEventOffset(event, canvas)
-            queuePostAnimation(function() {
-                var x = parseInt(event.offsetX/S)
-                var y = parseInt(event.offsetY/S)
-                if (x != click_x || y != click_y)
-                {
-                    // Only process drag event if it visits a different cell
-                    ungrabPlayers()
-                    click_x = x
-                    click_y = y
-                    if (edit_mode) editor.onCellClicked(gs, click_x, click_y, true)
-                    updateHashFromState()
-                }
-            })
+            var x = parseInt(event.offsetX/S),
+                y = parseInt(event.offsetY/S)
+            queuePostAnimation(function() { onCellClicked(x, y, true) })
         }
     })
 
