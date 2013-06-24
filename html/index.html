@@ -35,7 +35,7 @@
 </div>
 <div id="WinningPlayMode" style="display:none">
    <h2>You won!</h2>
-   <p><a href="javascript:client.invertGame()">Play in reverse</a>.</p>
+   <p><a href="javascript:invertGame()">Play in reverse</a>.</p>
 
    <h3>Rate this level</h3>   
     <div id="VoteWidget">
@@ -74,8 +74,20 @@
 
 <script type="text/javascript" src="require.js"></script>
 <script type="text/javascript">
-client = require("js/client/client.js")
-voting = require("js/client/voting.js")
+var GameState = require("js/client/GameState.js")
+var client = require("js/client/client.js")
+var voting = require("js/client/voting.js")
+
+function invertGame()
+{
+    var gs = client.getGameState()
+    if (gs.isWinning())
+    {
+        gs = GameState(gs)
+        gs.invertTo(GameState(client.getLevelCode()))
+        changeLevel(gs.encode())
+    }
+}
 
 function changeLevel(code)
 {

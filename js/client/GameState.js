@@ -36,13 +36,41 @@ function createGrid(value, width, height)
 
 function GameState(arg)
 {
-    var width  = 2
-    var height = 2
-    var layers = [ createGrid(WALL, width, height),
-                   createGrid(EMPTY, width, height) ]
-    var roles  = [ PUSHER, PUSHER ]
-
-    if (typeof(arg) == 'string') decode(arg)
+    if (typeof(arg) == 'object')
+    {
+        // Copy previous GameState object
+        var width  = arg.getWidth()
+        var height = arg.getHeight()
+        var layers = []
+        for (var l = 0; l < 2; ++l)
+        {
+            layers[l] = []
+            for (var y = 0; y < height; ++y)
+            {
+                layers[l][y] = []
+                for (var x = 0; x < width; ++x)
+                {
+                    layers[l][y][x] = arg.get(l, x, y)
+                }
+            }
+        }
+        var roles = [ arg.getRole(0), arg.getRole(1) ]
+    }
+    else
+    if (typeof(arg) == 'string')
+    {
+        // Decode stringified game state:
+        decode(arg)
+    }
+    else
+    {
+        // Initialize some sensible default values:
+        var width  = 2
+        var height = 2
+        var layers = [ createGrid(WALL, width, height),
+                       createGrid(EMPTY, width, height) ]
+        var roles  = [ PUSHER, PUSHER ]
+    }
 
     function inBounds(x, y)
     {

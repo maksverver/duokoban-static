@@ -63,17 +63,6 @@ function stringToLayers(arg)
     redraw()
 }
 
-function invertGame()
-{
-    queuePostAnimation(function() {
-
-        // Only invert in winning position.
-        if (!gs.isWinning()) return
-        gs.invertTo(GameState(level_code))
-        setLevelCode(gs.encode())
-    })
-}
-
 function checkWinning()
 {
     if (gs.isWinning())
@@ -851,7 +840,6 @@ function onSubmitLevel()
 
 module.exports = {
     initialize:         initialize,
-    invertGame:         invertGame,
     getEditMode:        getEditMode,
     setEditMode:        setEditMode,
     getLevelCode:       getLevelCode,
@@ -859,7 +847,7 @@ module.exports = {
     onSubmitLevel:      onSubmitLevel,
     getControlScheme:   function() { return control_scheme },   // TEMP: for testing
     setControlScheme:   function(val) { control_scheme = val }, // TEMP: for testing
-    getGameState:       function() { return gs },               // TEMP: for testing
+    getGameState:       function() { return gs },
     drawSpriteAt:       drawSpriteAt,       // used by editor
     redraw:             redraw,             // used by editor
     redrawTools:        redrawTools }       // used by editor

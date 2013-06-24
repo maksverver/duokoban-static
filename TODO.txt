@@ -17,3 +17,8 @@ editor:
  - make tools work more uniformly
  - allow adding/removing arbitrary borders (instead of just reframing)
  - allow selecting/moving parts of the level
+
+ - bug:
+(03:17:46 PM) Brend: [Duokoban] Bug: Als je in edit mode je level uitspeelt, en dan snel nog even wat edit, dan is je originele state zoek, maar je mag hem wel submitted als nieuw level :S
+(03:19:53 PM) Brend: i.e. als je in edit mode een solved level hebt, en je edit hem zodat hij unsolved is, dan blijft de 'Level solved!' submission box bestaan...
+(03:20:20 PM) Brend: (Je moet dan 'edit/play' klikken om dat te resetten)
