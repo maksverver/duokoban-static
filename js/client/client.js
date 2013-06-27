@@ -1,6 +1,6 @@
 "use strict"
 
-var GameState = require("./GameState.js")
+var GameState = require("../common/GameState.js")
 var editor = null  // loaded on demand
 var hash = require("./hash.js")
 var rpc = require("./rpc.js")
@@ -25,7 +25,7 @@ var explicit_move   = [ false, false ]
 
 var animations      = []
 var post_animations = []
-var winning_time    = -1
+var winning         = 0              // 0, or timestamp
 var swap_controls   = 0
 var control_scheme  = 1
 
@@ -65,22 +65,25 @@ function stringToLayers(arg)
 
 function checkWinning()
 {
-    if (gs.isWinning())
-    {
-        if (winning_time < 0)
-        {
-            winning_time = new Date().getTime()
-        }
+    var w = gs.isWinning()
+    if (w == winning) return
+    winning = w
+
+    document.getElementById('WinningPlayMode').style.visibility = (!edit_mode && winning) ? "visible" : "hidden"
+    document.getElementById('WinningEditMode').style.visibility = ( edit_mode && winning) ? "visible" : "hidden"
+
+    var elem = document.getElementById(edit_mode ? 'WinningEditMode' : 'WinningPlayMode')
+    var fade = function() {
+        var value = parseFloat(elem.style.opacity) + 1/16
+        elem.style.opacity = value
+        if (value < 1) setTimeout(fade, 100)
+        console.log(value)
     }
-    else
+    if (winning)
     {
-        winning_time = -1
+        elem.style.opacity = 0
+        fade(elem)
     }
-    document.getElementById('InstructionsPlayMode').style.display = (winning_time >= 0 ||  edit_mode) ? "none" : "block"
-    document.getElementById('InstructionsEditMode').style.display = (winning_time >= 0 || !edit_mode) ? "none" : "block"
-    document.getElementById('WinningPlayMode').style.display = (winning_time < 0 ||  edit_mode) ? "none" : "block"
-    document.getElementById('WinningEditMode').style.display = (winning_time < 0 || !edit_mode) ? "none" : "block"
-    return winning_time >= 0
 }
 
 function movePlayer(player, new_dir, walking)

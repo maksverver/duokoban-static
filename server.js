@@ -24,13 +24,20 @@ app.use('/rpc', function(request, response, next) {
         switch (request.body.method)
         {
         case 'submitLevel':
-            duokoban.submitLevel(request.body.code, request.body.title, request.body.author, function(error, message) {
+            duokoban.submitLevel( request.body.code,
+                                  request.body.title,
+                                  request.body.author,
+                                  function(error, message) {
                 response.json({error: error || undefined, message:message})
             })
             break
 
         case 'voteLevel':
-            duokoban.voteLevel(request.body.code, request.body.property, parseInt(request.body.vote), function(error, message) {
+            duokoban.voteLevel( request.body.code,
+                                request.body.property,
+                                parseInt(request.body.vote),
+                                request.body.oldVote ? parseInt(request.body.oldVote) : undefined,
+                                function(error, message) {
                 response.json({error: error || undefined, message:message})
             })
             break
