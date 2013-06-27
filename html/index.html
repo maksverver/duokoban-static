@@ -4,77 +4,75 @@
 <title>Duokoban</title>
 <link rel="stylesheet" type="text/css" href="style.css">
 </head>
-<body onload="client.initialize(); voting.updateWidget(client.getLevelCode())">
+<body onload="client.initialize('KKEAASSAJJJIpYSIBSIBSIZoSQSSCINdD'); voting.updateWidget(client.getLevelCode())">
+<table id="Levels">
+<tr><th>Level</th><th>Difficulty</th><th>Fun</th></tr>
+</table>
+
 <h1>Duokoban</h1>
-<p><a href="javascript:client.setEditMode(!client.getEditMode())">Edit/play</a> -
-   <a href="javascript:changeLevel(prompt('Level code:', client.getLevelCode()))">Import/export</a> -
-   Levels:
-   <select id="LevelSelect" onChange="changeLevel(value);blur()">
-     <option value="KKEAASSAJJJIpYSIBSIBSIZoSQSSCINdD" selected>O noes! by Maks</option>
-     <option value="KKEAAkpBQEIJRghqSCJpKGISSgIA6OB">Cross by Brend</option>
-     <option value="DFENzMUVRS6C">Introduction by Maks</option>
-     <option value=""></option>
-     <option value="KKEAgkkkESSSSIJJJhkkkESSSSIJJJhkkkESSSS">Blank Template</option>
-   </select>
-</p>
 
-<div id="GameCanvasHolder"
+<p><a href="javascript:client.setEditMode(!client.getEditMode())">Edit/play</a> &bullet;
+   <a href="javascript:changeLevel(prompt('Level code:', client.getLevelCode()))">Import/export</a></p>
+
+<div id="MainWindow">
+
+  <div id="GameCanvasHolder"
     ><canvas width="400" height="400" id="GameCanvas"
-        ><b>Error: this page uses an HTML5 Canvas which your browser doesn't support!</b></canvas
+      ><b>Error: this page uses an HTML5 Canvas which your browser doesn't support!</b></canvas
     ><canvas width="136" height="136" id="ToolCanvas" style="display:none"></canvas
-></div>
+  ></div>
 
-<div id="InstructionsPlayMode">
-  <h2>Objective</h2>
-  <p>Put the green boxes inside the green squares. Plain guy pushes, striped guy pulls.</p>
-</div>
-<div id="InstructionsEditMode" style="display:none">
-  <h2>Edit Mode</h2>
-  <p>Use the toolbox on the right to modify the game grid on the left.
-     If you solve your level in edit mode, you may submit it to the level database.</p>
-</div>
-<div id="WinningPlayMode" style="display:none">
-   <h2>You won!</h2>
-   <p><a href="javascript:invertGame()">Play in reverse</a>.</p>
+  <div id="WinningPlayMode" class="GameOverlay" style="visibility:hidden">
+    <span onclick="document.getElementById('WinningPlayMode').style.visibility='hidden'" class="clickable" style="float:right">x</span>
 
-   <h3>Rate this level</h3>   
+    <h2>You won!</h2>
+    <p><a href="javascript:invertGame()">Play in reverse</a>.</p>
+
+    <h3>Rate this level</h3>
     <div id="VoteWidget">
-    <table style="margin:auto">
-    <tr><th style="text-align:right">Fun:&nbsp;</th>
-        <td><div id="fun1" class="star open clickable" onclick="voting.vote('fun',1)"></div>
-            <div id="fun2" class="star open clickable" onclick="voting.vote('fun',2)"></div>
-            <div id="fun3" class="star open clickable" onclick="voting.vote('fun',3)"></div>
-            <div id="fun4" class="star open clickable" onclick="voting.vote('fun',4)"></div>
-            <div id="fun5" class="star open clickable" onclick="voting.vote('fun',5)"></div></td>
-    </tr>
-    <tr><th style="text-align:right">Difficulty:&nbsp;</th>
-        <td><div id="difficulty1" class="star open clickable" onclick="voting.vote('difficulty',1)"></div>
-            <div id="difficulty2" class="star open clickable" onclick="voting.vote('difficulty',2)"></div>
-            <div id="difficulty3" class="star open clickable" onclick="voting.vote('difficulty',3)"></div>
-            <div id="difficulty4" class="star open clickable" onclick="voting.vote('difficulty',4)"></div>
-            <div id="difficulty5" class="star open clickable" onclick="voting.vote('difficulty',5)"></div></td>
-    </tr>
-    </table>
+      <table style="margin:auto">
+      <tr><th style="text-align:right">Fun:&nbsp;</th>
+          <td><div id="fun1" class="star open clickable" onclick="voting.vote('fun',1)"></div>
+              <div id="fun2" class="star open clickable" onclick="voting.vote('fun',2)"></div>
+              <div id="fun3" class="star open clickable" onclick="voting.vote('fun',3)"></div>
+              <div id="fun4" class="star open clickable" onclick="voting.vote('fun',4)"></div>
+              <div id="fun5" class="star open clickable" onclick="voting.vote('fun',5)"></div></td>
+      </tr>
+      <tr><th style="text-align:right">Difficulty:&nbsp;</th>
+          <td><div id="difficulty1" class="star open clickable" onclick="voting.vote('difficulty',1)"></div>
+              <div id="difficulty2" class="star open clickable" onclick="voting.vote('difficulty',2)"></div>
+              <div id="difficulty3" class="star open clickable" onclick="voting.vote('difficulty',3)"></div>
+              <div id="difficulty4" class="star open clickable" onclick="voting.vote('difficulty',4)"></div>
+              <div id="difficulty5" class="star open clickable" onclick="voting.vote('difficulty',5)"></div></td>
+      </tr>
+      </table>
     </div>
+  </div>
+
+  <div id="WinningEditMode" class="GameOverlay" style="visibility:hidden">
+    <span onclick="document.getElementById('WinningEditMode').style.visibility='hidden'" class="clickable" style="float:right">x</span>
+    <h2>Level solved!</h2>
+    <p>Congratulations, you just solved the level you created!<br>
+    If you think it is any good, please submit it to the database:</p>
+    <form onsubmit="return client.onSubmitLevel()">
+        <table style="margin:auto">
+        <tr><th>Level title:</th><td><input type="text" id="Title"></td></tr>
+        <tr><th>Author name:</th><td><input type="text" id="Author"></td></tr>
+        <tr><td></td><td><input type="submit" value="Submit level"></td></tr>
+        </table>
+    </form>
+  </div>
+
 </div>
-<div id="WinningEditMode" style="display:none">
-  <h2>Level solved!</h2>
-  <p>Congratulations, you just solved the level you created!
-  If you think it is any good, please submit it to the database:</p>
-  <form onsubmit="return client.onSubmitLevel()">
-    <table style="margin:auto">
-      <tr><td>Level title:</td><td><input type="text" id="Title"></td></tr>
-      <tr><td>Author name:</td><td><input type="text" id="Author"></td></tr>
-      <tr><td></td><td><input type="submit" value="Submit level"></td></tr>
-    </table>
-  </form>
-</div>
-<h2>Controls</h2>
+
+<h2>Objective</h2>
+<p>Put the green boxes inside the green squares. Plain guy pushes, striped guy pulls.</p>
+<h2>Controls:</h2>
 <p>Cursor keys for red player. W/A/S/D for blue player. P to swap controls. R to restart.</p>
 
 <script type="text/javascript" src="require.js"></script>
 <script type="text/javascript">
-var GameState = require("js/client/GameState.js")
+var GameState = require("js/common/GameState.js")
 var client = require("js/client/client.js")
 var voting = require("js/client/voting.js")
 

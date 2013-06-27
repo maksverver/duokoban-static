@@ -1,4 +1,6 @@
- - fade in "You've won!"  text (again)
+ - level list:
+    sorting?
+    creation/modification times?
  - style frontpage
  - favicon?
 
@@ -14,6 +16,8 @@ server:
  - maybe: internet multiplayer?
 
 editor:
+ - should refresh level list after submission
+ - should allow deleting of levels
  - make tools work more uniformly
  - allow adding/removing arbitrary borders (instead of just reframing)
  - allow selecting/moving parts of the level

@@ -44,7 +44,7 @@ function updateWidget(code)
     for (var i in properties)
     {
         var property = properties[i]
-        var vote = getCurrentVote(property)
+        var vote = getCurrentVote(property) || 0
         for (var i = 1; i <= 5; ++i)
         {
             var elem = document.getElementById(property + i)

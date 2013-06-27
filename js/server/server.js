@@ -19,10 +19,10 @@ function validateLevel(code)
         {
             var a = gs.get(0, x, y)
             var b = gs.get(1, x, y)
-            if (a > GOAL2)   return "Invalid layer0 value!"
-            if (b > PLAYER2) return "Invalid layer1 value!"
-            if (b == PLAYER1) ++player1
-            if (b == PLAYER2) ++player2
+            if (a > 4) return "Invalid layer0 value!"  // 4 == GOAL2
+            if (b > 7) return "Invalid layer1 value!"  // 7 == PLAYER2
+            if (b == 6) ++player1                      // 6 == PLAYER1
+            if (b == 7) ++player2                      // 7 == PLAYER2
         }
     }
     if (player1 == 0) return "Missing player 1!"
@@ -134,7 +134,7 @@ function voteLevel(code, property, vote, oldVote, callback)
                 console.log("Changing vote from " + oldVote + " to " + vote + " on " + property +
                             " for level " + level_id + " (" + result.rows[0].title + ")")
                 database.query('UPDATE votes SET (value,sum,count) = (1.0*(sum+$3)/(count+1), sum+$3, count) WHERE level_id=$1 AND property=$2 AND count > 0',
-                               [level_id, property, (vote - oldVote)], queryCallback )
+                               [level_id, property, (vote - oldVote)], queryCallback)
             }
             else
             {
@@ -149,7 +149,14 @@ function voteLevel(code, property, vote, oldVote, callback)
 
 function listLevels(callback)
 {
-    database.query( 'SELECT code,title,author FROM levels ORDER BY created_at ASC, level_id ASC', function(error, result) {
+    database.query( "SELECT \
+    code, title, author, created_at, updated_at, \
+    votes_difficulty.value AS difficulty, \
+    votes_fun.value AS fun \
+FROM levels \
+LEFT JOIN votes AS votes_difficulty ON votes_difficulty.level_id = levels.level_id AND votes_difficulty.property='difficulty' \
+LEFT JOIN votes AS votes_fun ON votes_fun.level_id = levels.level_id AND votes_fun.property='fun' \
+ORDER BY created_at ASC, levels.level_id ASC", function(error, result) {
         if (error)
         {
             console.log(error)

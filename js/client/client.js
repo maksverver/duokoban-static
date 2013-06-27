@@ -35,9 +35,11 @@ var dirty           = null           // redraw marked game cells only
 var game_dirty      = false          // redraw entire game canvas 
 var tools_dirty     = false          // redraw entire tool canvas
 
-function stringToLayers(arg)
+function stringToLayers(code)
 {
-    gs.decode(arg)
+    selectLevelRow(code)
+
+    gs.decode(code)
     for (var i = 0; i < 2; ++i) grab_dir[i] = -1
     var width  = gs.getWidth()
     var height = gs.getHeight()
@@ -77,7 +79,6 @@ function checkWinning()
         var value = parseFloat(elem.style.opacity) + 1/16
         elem.style.opacity = value
         if (value < 1) setTimeout(fade, 100)
-        console.log(value)
     }
     if (winning)
     {
@@ -380,36 +381,105 @@ function restart()
     } )
 }
 
-function initialize()
+var level_rows = {}
+var selected_level_row = null
+
+function selectLevelRow(code)
+{
+    if (selected_level_row)
+    {
+        selected_level_row.className = selected_level_row.className.replace(' selected', '')
+    }
+    selected_level_row = null
+    if (level_rows[code])
+    {
+        selected_level_row = level_rows[code]
+        selected_level_row.className += ' selected'
+    }
+}
+
+function setLevelList(levels)
+{
+/*
+    var select = document.getElementById("LevelSelect")
+    while (select.firstChild) select.removeChild(select.firstChild)
+    for (var i in result.levels)
+    {
+        var level = result.levels[i]
+        var option = document.createElement("option")
+        option.value = level.code
+        option.appendChild(document.createTextNode(
+            (level.title || "Untitled") + " by " +
+            (level.author || "Anonymous") ))
+        select.appendChild(option)
+        if (level.code == level_code) option.selected = true
+    }
+
+    // Add blank template:
+    var option = document.createElement("option")
+    select.appendChild(option)
+    var option = document.createElement("option")
+    option.value="KKEAgkkkESSSSIJJJhkkkESSSSIJJJhkkkESSSS"
+    option.appendChild(document.createTextNode("Blank Template"))
+    select.appendChild(option)
+*/
+
+    var levelsTable = document.getElementById('Levels')
+    // TODO: empty table first!
+
+    level_rows = {}
+    selected_level_row = null
+    for (var i in levels)
+    {
+        var level = levels[i]
+        var tr = document.createElement('tr')
+        tr.className = 'level'
+
+        var td = document.createElement('td')
+        var span = document.createElement('span')
+        span.className = 'title'
+        span.appendChild(document.createTextNode(level.title || "Untitled"))
+        if (level.code)
+        {
+            span.className += ' clickable'
+            span.onclick = changeLevel.bind(null, level.code)
+            level_rows[level.code] = tr
+        }
+        td.appendChild(span)
+        var span = document.createElement('span')
+        span.className = 'author'
+        span.appendChild(document.createTextNode(level.author || "Anonymous"))
+        td.appendChild(span)
+        tr.appendChild(td)
+        var td = document.createElement('td')
+        td.className = 'rating'
+        if (level.difficulty)
+        {
+            td.appendChild(document.createTextNode(Math.round(10*level.difficulty)/10))
+        }
+        tr.appendChild(td)
+        var td = document.createElement('td')
+        td.className = 'rating'
+        tr.appendChild(td)
+        if (level.fun) 
+        {
+            td.appendChild(document.createTextNode(Math.round(10*level.fun)/10))
+        }
+        levelsTable.appendChild(tr)
+    }
+    selectLevelRow(level_code)
+}
+
+function updateLevelList()
 {
     rpc.rpc({ method: 'listLevels' }, function(result) {
         if (result.error) alert(result.error)
-
-        // Initialize level selection box:
-        if (result.levels && result.levels.length > 0)
-        {
-            var select = document.getElementById("LevelSelect")
-            while (select.firstChild) select.removeChild(select.firstChild)
-            for (var i in result.levels)
-            {
-                var level = result.levels[i]
-                var option = document.createElement("option")
-                option.value = level.code
-                option.appendChild(document.createTextNode(
-                    (level.title || "Untitled") + " by " +
-                    (level.author || "Anonymous") ))
-                select.appendChild(option)
-                if (level.code == level_code) option.selected = true
-            }
-            // Add blank template:
-            var option = document.createElement("option")
-            select.appendChild(option)
-            var option = document.createElement("option")
-            option.value="KKEAgkkkESSSSIJJJhkkkESSSSIJJJhkkkESSSS"
-            option.appendChild(document.createTextNode("Blank Template"))
-            select.appendChild(option)
-        }
+        if (result.levels) setLevelList(result.levels)
     })
+}
+
+function initialize(initial_level_code)
+{
     function fixEventOffset(event, element)
     {
         // This is retarded. JavaScript in the browser fucking sucks.
@@ -549,8 +619,10 @@ function initialize()
         }
     })
 
+    updateLevelList()
+
     if (document.location.hash) updateStateFromHash()
-    else setLevelCode(document.getElementById('LevelSelect').value)
+    else setLevelCode(initial_level_code)
     window.onhashchange = function() { queuePostAnimation(updateStateFromHash) }
 }
 
