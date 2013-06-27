@@ -133,7 +133,7 @@ function voteLevel(code, property, vote, oldVote, callback)
             {
                 console.log("Changing vote from " + oldVote + " to " + vote + " on " + property +
                             " for level " + level_id + " (" + result.rows[0].title + ")")
-                database.query('UPDATE votes SET (value,sum,count) = (1.0*(sum+$3)/(count+1), sum+$3, count) WHERE level_id=$1 AND property=$2 AND count > 0',
+                database.query('UPDATE votes SET (value,sum) = (1.0*(sum+$3)/count, sum+$3) WHERE level_id=$1 AND property=$2 AND count > 0',
                                [level_id, property, (vote - oldVote)], queryCallback)
             }
             else
