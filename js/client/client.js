@@ -4,6 +4,7 @@ var GameState = require("../common/GameState.js")
 var editor = null  // loaded on demand
 var hash = require("./hash.js")
 var rpc = require("./rpc.js")
+var voting = require("./voting.js")
 
 var DX = [ +1,  0, -1,  0 ]
 var DY = [  0, +1,  0, -1 ]
@@ -38,6 +39,7 @@ var tools_dirty     = false          // redraw entire tool canvas
 function stringToLayers(code)
 {
     selectLevelRow(code)
+    voting.updateWidget(code)
 
     gs.decode(code)
     for (var i = 0; i < 2; ++i) grab_dir[i] = -1
@@ -442,7 +444,7 @@ function setLevelList(levels)
         if (level.code)
         {
             span.className += ' clickable'
-            span.onclick = changeLevel.bind(null, level.code)
+            span.onclick = setLevelCode.bind(null, level.code)
             level_rows[level.code] = tr
         }
         td.appendChild(span)

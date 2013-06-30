@@ -4,7 +4,7 @@
 <title>Duokoban</title>
 <link rel="stylesheet" type="text/css" href="style.css">
 </head>
-<body onload="client.initialize('KKEAASSAJJJIpYSIBSIBSIZoSQSSCINdD'); voting.updateWidget(client.getLevelCode())">
+<body onload="client.initialize('KKEAASSAJJJIpYSIBSIBSIZoSQSSCINdD')">
 <table id="Levels">
 <tr><th>Level</th><th>Difficulty</th><th>Fun</th></tr>
 </table>
@@ -12,7 +12,7 @@
 <h1>Duokoban</h1>
 
 <p><a href="javascript:client.setEditMode(!client.getEditMode())">Edit/play</a> &bullet;
-   <a href="javascript:changeLevel(prompt('Level code:', client.getLevelCode()))">Import/export</a></p>
+   <a href="javascript:client.setLevelCode(prompt('Level code:', client.getLevelCode()))">Import/export</a></p>
 
 <div id="MainWindow">
 
@@ -83,16 +83,7 @@ function invertGame()
     {
         gs = GameState(gs)
         gs.invertTo(GameState(client.getLevelCode()))
-        changeLevel(gs.encode())
-    }
-}
-
-function changeLevel(code)
-{
-    if (code)
-    {
-        client.setLevelCode(code)
-        voting.updateWidget(code)
+        client.setLevelCode(gs.encode())
     }
 }
 </script>
