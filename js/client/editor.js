@@ -14,16 +14,16 @@ var tools = [ WALL,  OPEN,    REFRAME,
               GOAL,  GOAL1,   GOAL2,
               BOX,   PLAYER1, PLAYER2 ]
 
-// Index in the tool box array:
-var selected_tool = -1
-var negative      = false
+var selected_tool  = -1             // index in the tool box array:
+var negative       = false
+var reframe_active = false
 
 function renderTools(context)
 {
     for (var i = 0; i < tools.length; ++i)
     {
         var x = i%3, y = 2 - (i - x)/3
-        if (i == selected_tool)
+        if (i == selected_tool || (tools[i] == REFRAME && reframe_active))
         {
             context.fillStyle = '#8000ff'
             context.fillRect((1.1*x)*S, (1.1*y)*S, 1.2*S, 1.2*S)
@@ -42,20 +42,20 @@ function selectTool(i)
 {
     if (i < -1 || i >= tools.length) i = -1
 
-    selected_tool = (i == selected_tool) ? -1 : i
+    if (tools[i] == REFRAME)
+    {
+        reframe_active = !reframe_active
+    }
+    else
+    {
+        selected_tool = (i == selected_tool) ? -1 : i
+    }
     client.redrawTools()
 }
 
 function onCellClicked(gs, x, y, dragged)
 {
     var tool = tools[selected_tool]
-
-    if (tool == REFRAME)
-    {
-        gs.reframe()
-        client.setLevelCode(gs.encode())
-        return
-    }
 
     if (tool > OPEN)
     {
@@ -137,7 +137,14 @@ function onCellClicked(gs, x, y, dragged)
     default:
         return
     }
-    client.redraw(x, y)
+    if (reframe_active && gs.reframe())
+    {
+        client.setLevelCode(gs.encode())
+    }
+    else
+    {
+        client.redraw(x, y)
+    }
 }
 
 module.exports = {

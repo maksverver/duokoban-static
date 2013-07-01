@@ -78,6 +78,11 @@ function GameState(arg)
                0 <= y && y < height
     }
 
+    function onBoundary(x, y)
+    {
+        return x == 0 || y == 0 || x == width - 1 || y == height - 1
+    }
+
     function isWinning()
     {
         var winning = true, have_goals = false
@@ -111,7 +116,7 @@ function GameState(arg)
                 }
             }
         }
-        if (x1 > x2  || y1 > y2) return
+        if (x1 > x2  || y1 > y2) return false
 
         height = y2 - y1 + 3
         width  = x2 - x1 + 3
@@ -126,6 +131,7 @@ function GameState(arg)
                 layers[1][y - y1 + 1][x - x1 + 1] = old_layers[1][y][x]
             }
         }
+        return true
     }
 
     function encode()
@@ -264,6 +270,7 @@ function GameState(arg)
 
     return {
         inBounds:   inBounds,
+        onBoundary: onBoundary,
         isWinning:  isWinning,
         reframe:    reframe,
         encode:     encode,
