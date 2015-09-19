@@ -651,7 +651,6 @@ function drawSpriteAt(context, x, y, what, offset_dir)
         context.clip()
         context.strokeStyle = '#d0d0d0'
         context.lineWidth   = 1  // FIXME: should be dependent on S?
-        // if (layer1[y][x] == LOCKED) context.strokeStyle = 'red'
         context.strokeRect(x + 0.5, y + 0.5, S - 0.5, S - 0.5)
     }
 
