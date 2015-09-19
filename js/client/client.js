@@ -485,12 +485,12 @@ function initialize(initial_level_code)
     function fixEventOffset(event, element)
     {
         // This is retarded. JavaScript in the browser fucking sucks.
-        if (!event.hasOwnProperty('offsetX'))
+        if (!('offsetX' in event))
         {
             event.offsetX = event.layerX - element.offsetLeft
             event.offsetY = event.layerY - element.offsetTop
             /* `element` has an attribute `offsetParent` too,
-            but apparently adding offsets recusively doesn't work! */
+                but apparently adding offsets recusively doesn't work! */
         }
     }
 
