@@ -3,12 +3,12 @@
           "version": "0.0.1",
           "author": "Maks Verver <maksverver@geocities.com>",
           "dependencies": {
-                    "express": "3.2.x",
-                    "pg": "6.4.x",
-                    "pg-native": "1.10.x"
+                    "express": "4.17.x",
+                    "pg": "8.6.x",
+                    "pg-native": "3.0.x"
           },
           "engines": {
-                    "node": "8.1.x",
-                    "npm": "5.2.x"
+                    "node": "15.14.x",
+                    "npm": "7.10.x"
           }
 }

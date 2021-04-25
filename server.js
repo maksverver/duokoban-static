@@ -1,5 +1,6 @@
 "use strict"
 
+var bodyParser  = require('body-parser')
 var duokoban    = require('./js/server/server.js')
 var express     = require('express')
 var http        = require('http')
@@ -11,7 +12,7 @@ app.use('/',          express.static(__dirname + '/html'))
 app.use('/js/common', express.static(__dirname + '/js/common'))
 app.use('/js/client', express.static(__dirname + '/js/client'))
 
-app.use('/rpc', express.bodyParser())
+app.use('/rpc', bodyParser.json())
 app.use('/rpc', function(request, response, next) {
 
     if (url.parse(request.url).pathname != "/" || request.method != "POST")
