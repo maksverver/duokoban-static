@@ -1,6 +1,6 @@
 "use strict"
 
-var GameState = require("../common/GameState.js")
+var GameState = require("GameState.js")
 var editor = null  // loaded on demand
 var hash = require("./hash.js")
 var rpc = require("./rpc.js")
