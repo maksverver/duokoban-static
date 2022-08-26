@@ -28,6 +28,13 @@
     <h2>You won!</h2>
     <p><a href="javascript:invertGame()">Play in reverse</a>.</p>
 
+    <p>(Voting is not possible in the static version of the game.)</p>
+    <!--
+      The dynamic version of the game allowed players to vote how "fun" and
+      "difficult" a level was, after solving it. This isn't supported in the
+      static version of the game.
+    -->
+    <!--
     <h3>Rate this level</h3>
     <div id="VoteWidget">
       <table style="margin:auto">
@@ -47,11 +54,24 @@
       </tr>
       </table>
     </div>
+    -->
   </div>
 
   <div id="WinningEditMode" class="GameOverlay" style="visibility:hidden">
     <span onclick="document.getElementById('WinningEditMode').style.visibility='hidden'" class="clickable" style="float:right">x</span>
     <h2>Level solved!</h2>
+    <p>Congratulations, you just solved the level you created!<br>
+    If you think it is any good, please an email with the level code
+    (which you can get from the URL, or by clicking Import/export) to
+    <a class="replace-email"  href="mailto:my-email?subject=New+Duokoban+level" target="_blank">me</a>
+    so I can add it to the repository.</p>
+
+    <!--
+      The dynamic version of the game allowed players to submit new levels. This
+      is not supported by the static version of the game, but I may add levels
+      that people email to me.
+    -->
+    <!--
     <p>Congratulations, you just solved the level you created!<br>
     If you think it is any good, please submit it to the database:</p>
     <form onsubmit="return client.onSubmitLevel()">
@@ -61,6 +81,7 @@
         <tr><td></td><td><input type="submit" value="Submit level"></td></tr>
         </table>
     </form>
+    -->
   </div>
 
 </div>
@@ -70,11 +91,11 @@
 <h2>Controls:</h2>
 <p>Cursor keys for red player. W/A/S/D for blue player. P to swap controls. R to restart.</p>
 
+<script type="text/javascript" src="replace-email.js"></script>
 <script type="text/javascript" src="require.js"></script>
 <script type="text/javascript">
 var GameState = require("GameState.js")
 var client = require("client.js")
-var voting = require("voting.js")
 
 function invertGame()
 {

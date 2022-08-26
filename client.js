@@ -1,10 +1,9 @@
 "use strict"
 
 var GameState = require("GameState.js")
+var level_list = require("static-level-list.js")
 var editor = null  // loaded on demand
 var hash = require("./hash.js")
-var rpc = require("./rpc.js")
-var voting = require("./voting.js")
 
 var DX = [ +1,  0, -1,  0 ]
 var DY = [  0, +1,  0, -1 ]
@@ -39,7 +38,6 @@ var tools_dirty     = false          // redraw entire tool canvas
 function stringToLayers(code)
 {
     selectLevelRow(code)
-    voting.updateWidget(code)
 
     gs.decode(code)
     for (var i = 0; i < 2; ++i) grab_dir[i] = -1
@@ -472,14 +470,6 @@ function setLevelList(levels)
     selectLevelRow(level_code)
 }
 
-function updateLevelList()
-{
-    rpc.rpc({ method: 'listLevels' }, function(result) {
-        if (result.error) alert(result.error)
-        if (result.levels) setLevelList(result.levels)
-    })
-}
-
 function initialize(initial_level_code)
 {
     function fixEventOffset(event, element)
@@ -621,7 +611,7 @@ function initialize(initial_level_code)
         }
     })
 
-    updateLevelList()
+    setLevelList(level_list);
 
     if (document.location.hash) updateStateFromHash()
     else setLevelCode(initial_level_code)
@@ -893,35 +883,12 @@ function redrawTools()
     tools_dirty = true
 }
 
-function onSubmitLevel()
-{
-    rpc.rpc({
-        method: 'submitLevel',
-        code:   getLevelCode(),
-        title:  document.getElementById('Title').value || "Untitled",
-        author: document.getElementById('Author').value || "Anonymous"
-    }, function(result) {
-        if (result.error)
-        {
-            alert(result.error)
-        }
-        else
-        {
-            document.getElementById('Title').value = ''
-            document.getElementById('Author').value = ''
-            if (result.message) alert(result.message)
-        }
-    })
-    return false  // suppress form submission
-}
-
 module.exports = {
     initialize:         initialize,
     getEditMode:        getEditMode,
     setEditMode:        setEditMode,
     getLevelCode:       getLevelCode,
     setLevelCode:       setLevelCode,
-    onSubmitLevel:      onSubmitLevel,
     getControlScheme:   function() { return control_scheme },   // TEMP: for testing
     setControlScheme:   function(val) { control_scheme = val }, // TEMP: for testing
     getGameState:       function() { return gs },
